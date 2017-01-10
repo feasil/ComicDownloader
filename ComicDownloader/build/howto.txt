@@ -1,0 +1,9 @@
+REM Si utilisation avec proxy : 
+REM java -jar ComicDownloader.jar URLProxy PortProxy userProxy passwordProxy
+REM 
+REM sinon : 
+REM java -jar ComicDownloader.jar
+
+
+java -jar ComicDownloader.jar
+pause
