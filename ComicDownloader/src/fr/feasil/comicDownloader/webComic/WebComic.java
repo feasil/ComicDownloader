@@ -20,6 +20,8 @@ public abstract class WebComic extends Observable {
 		{
 			if ( url.toLowerCase().startsWith("http://viewcomic.com/") )
 				return new ViewComic(url);
+			else if ( url.toLowerCase().startsWith("http://view-comic.com/") )
+				return new ViewComic2(url);
 			else if ( url.toLowerCase().startsWith("http://readcomicbooksonline.com/") )
 				return new ReadComicBooksOnline(url);
 		}
