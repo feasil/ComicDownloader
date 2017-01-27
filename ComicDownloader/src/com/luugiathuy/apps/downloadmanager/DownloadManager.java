@@ -149,7 +149,7 @@ public class DownloadManager {
 	
 	public void setProxy(String urlProxy, int portProxy, final String userProxy, final String passwordProxy) {
 		this.proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(urlProxy, portProxy));;
-		
+		//System.out.println("DEBUG :: setProxy : " + urlProxy + "  " + portProxy + "  " + userProxy + "  " + passwordProxy);
 		Authenticator authenticator = new Authenticator() {
 			public PasswordAuthentication getPasswordAuthentication() {
 				return (new PasswordAuthentication(userProxy, passwordProxy.toCharArray()));

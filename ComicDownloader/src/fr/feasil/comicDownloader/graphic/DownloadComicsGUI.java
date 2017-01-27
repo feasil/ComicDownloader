@@ -17,10 +17,13 @@ import java.util.zip.ZipOutputStream;
 import javax.swing.JOptionPane;
 import javax.swing.JProgressBar;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.UIManager;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 
 import com.luugiathuy.apps.downloadmanager.DownloadManager;
 import com.luugiathuy.apps.downloadmanager.DownloadTableModel;
@@ -107,6 +110,25 @@ public class DownloadComicsGUI extends javax.swing.JFrame implements Observer{
 
         jtbDownload.setModel(mTableModel);
         jScrollPane1.setViewportView(jtbDownload);
+        mTableModel.addTableModelListener(new TableModelListener() {
+        	//Pour scroller au fur et à mesure du download
+			@Override
+			public void tableChanged(final TableModelEvent e) {
+				if ( e.getFirstRow() == e.getLastRow() )
+				{
+					Downloader d = DownloadManager.getInstance().getDownloadList().get(e.getFirstRow());
+					if ( d.getState() == Downloader.COMPLETED || d.getState() == Downloader.DOWNLOADING )
+					{
+						SwingUtilities.invokeLater(new Runnable() {
+			                public void run() {
+			                    int viewRow = jtbDownload.convertRowIndexToView(e.getFirstRow());
+			                    jtbDownload.scrollRectToVisible(jtbDownload.getCellRect(viewRow, 0, true));    
+			                }
+			            });
+					}
+				}
+			}
+		});
 
         jbnPause.setText("Pause");
         jbnPause.setEnabled(false);
@@ -305,7 +327,7 @@ public class DownloadComicsGUI extends javax.swing.JFrame implements Observer{
 	        		protected Void doInBackground() {
         				//DownloadManager.getInstance().SetNumConnPerDownload(1);
 	        			try {
-		        		tomes = webComic.getTomes();
+	        				tomes = webComic.getTomes();
 	        			} catch (IOException e)
 	        			{
 	        				jtxURL.setEnabled(true);
