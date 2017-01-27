@@ -131,6 +131,20 @@ public class DownloadManager {
 		return mDownloadList;
 	}
 	
+	/**
+	 * Renvoie l'avancement global en %
+	 */
+	public int getAvancementGlobal() {
+		return (int) ((getCompletedDownloadCount()*100.)/mDownloadList.size());
+	}
+	public int getCompletedDownloadCount() {
+		int avancement = 0;
+		for ( Downloader d : mDownloadList )
+			if ( d.getState() == Downloader.COMPLETED )
+				avancement++;
+		return avancement;
+	}
+	
 	
 	public Downloader createDownload(URL verifiedURL, String outputFolder) {
 		HttpDownloader fd = new HttpDownloader(verifiedURL, outputFolder, mNumConnPerDownload);

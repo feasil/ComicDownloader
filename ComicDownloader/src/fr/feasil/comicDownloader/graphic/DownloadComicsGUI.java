@@ -93,6 +93,7 @@ public class DownloadComicsGUI extends javax.swing.JFrame implements Observer{
         jtbDownload = new javax.swing.JTable();
         jbnPause = new javax.swing.JButton();
         jbnZip = new javax.swing.JButton();
+        jlblAvancement = new javax.swing.JLabel();
         jbnCancel = new javax.swing.JButton();
         jbnExit = new javax.swing.JButton();
         jbnResume = new javax.swing.JButton();
@@ -117,7 +118,7 @@ public class DownloadComicsGUI extends javax.swing.JFrame implements Observer{
 				if ( e.getFirstRow() == e.getLastRow() )
 				{
 					Downloader d = DownloadManager.getInstance().getDownloadList().get(e.getFirstRow());
-					if ( d.getState() == Downloader.COMPLETED || d.getState() == Downloader.DOWNLOADING )
+					if ( d.getState() == Downloader.DOWNLOADING )
 					{
 						SwingUtilities.invokeLater(new Runnable() {
 			                public void run() {
@@ -125,6 +126,10 @@ public class DownloadComicsGUI extends javax.swing.JFrame implements Observer{
 			                    jtbDownload.scrollRectToVisible(jtbDownload.getCellRect(viewRow, 0, true));    
 			                }
 			            });
+					}
+					else if ( d.getState() == Downloader.COMPLETED)
+					{
+						jlblAvancement.setText("Download : " + DownloadManager.getInstance().getAvancementGlobal() + "% (" + DownloadManager.getInstance().getCompletedDownloadCount() + "/" + DownloadManager.getInstance().getDownloadList().size() + ")");
 					}
 				}
 			}
@@ -145,6 +150,7 @@ public class DownloadComicsGUI extends javax.swing.JFrame implements Observer{
                 jbnZipActionPerformed(evt);
             }
         });
+        jlblAvancement.setText("");
 
         jbnCancel.setText("Cancel");
         jbnCancel.setEnabled(false);
@@ -185,6 +191,8 @@ public class DownloadComicsGUI extends javax.swing.JFrame implements Observer{
                         .addComponent(jbnCancel, javax.swing.GroupLayout.PREFERRED_SIZE, 104, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
                         .addComponent(jbnZip, javax.swing.GroupLayout.PREFERRED_SIZE, 104, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(jlblAvancement)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 177, Short.MAX_VALUE)
                         .addComponent(jbnExit, javax.swing.GroupLayout.PREFERRED_SIZE, 104, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
@@ -212,6 +220,7 @@ public class DownloadComicsGUI extends javax.swing.JFrame implements Observer{
                     .addComponent(jbnResume)
                     .addComponent(jbnCancel)
                     .addComponent(jbnZip)
+                    .addComponent(jlblAvancement)
                     .addComponent(jbnExit))
                 .addContainerGap())
         );
@@ -486,6 +495,7 @@ public class DownloadComicsGUI extends javax.swing.JFrame implements Observer{
     private javax.swing.JButton jbnExit;
     private javax.swing.JButton jbnPause;
     private javax.swing.JButton jbnZip;
+    private javax.swing.JLabel jlblAvancement;
     private javax.swing.JButton jbnResume;
     private javax.swing.JTable jtbDownload;
     private javax.swing.JTextField jtxURL;
