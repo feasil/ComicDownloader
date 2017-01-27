@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+
+<project name="ComicDownloader" default="all" basedir=".">
+
+	<!-- Globals -->
+	<property name="workspace.dir" value="${basedir}/.."/>
+	<property name="src.dir" value="src"/>
+	<property name="compile.dir" value="build/bin"/>
+	<property name="jar.dir" value="build"/>
+	<property name="lib.dir" value="lib"/>
+	<!--<property name="log4j.dir" value="log4j"/>-->
+	<tstamp>
+		<format property="TODAY" pattern="yyyy-MM-dd HH:mm:ss" />
+	</tstamp>
+	
+	
+	
+	<!-- Clean it -->
+	<target name="clean" description="clean up" >
+		<tstamp/>
+		<delete dir="${compile.dir}"/>
+	</target>
+	
+	<!-- Init -->
+	<target name="init" depends="clean">
+		<tstamp/>
+		<mkdir dir="${compile.dir}"/>
+		<mkdir dir="${jar.dir}"/>
+	</target>
+	
+	<target name="copierSources" depends="init">
+		<!--<copy todir="${compile.dir}">
+			<fileset dir="${log4j.dir}" />
+		</copy>-->
+		
+		<!--A ne faire qu'une fois :--> 
+		<!--<copy todir="${compile.dir}">
+			<fileset dir="classAPI" />
+		</copy>-->
+		
+		<copy todir="${compile.dir}">
+			<fileset dir="bin" />
+		</copy>
+	</target>
+	
+	 <!-- Jar it -->
+	<target name="jar" depends="copierSources">
+		<jar destfile="${jar.dir}/${ant.project.name}.jar" basedir="${compile.dir}" compress="true">
+			<manifest>
+				<attribute name="Built-By" value="feasil"/>
+				<attribute name="Main-Class" value="fr.feasil.comicDownloader.graphic.DownloadComicsGUI"/>
+				<attribute name="Built-Date" value="${TODAY}"/> 
+				<attribute name="Class-Path" value="${lib.dir}/jsoup-1.9.2.jar"/>
+			</manifest>
+			<patternset>
+				<include name="fr/feasil/comicDownloader/**/*.class" />
+				<include name="com/luugiathuy/apps/downloadmanager/*.class" />
+			</patternset>
+		</jar>
+	</target>
+
+	
+	
+	<target name="all" depends="jar">
+		
+	</target>
+</project>
