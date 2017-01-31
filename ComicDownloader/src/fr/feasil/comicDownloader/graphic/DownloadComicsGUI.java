@@ -32,6 +32,9 @@ import com.luugiathuy.apps.downloadmanager.ProgressRenderer;
 
 import fr.feasil.comicDownloader.Page;
 import fr.feasil.comicDownloader.Tome;
+import fr.feasil.comicDownloader.lite.ComicLite;
+import fr.feasil.comicDownloader.lite.ListComicLite;
+import fr.feasil.comicDownloader.lite.graphic.DialogComicList;
 import fr.feasil.comicDownloader.webComic.WebComic;
 
 public class DownloadComicsGUI extends javax.swing.JFrame implements Observer{
@@ -89,6 +92,7 @@ public class DownloadComicsGUI extends javax.swing.JFrame implements Observer{
 
         jtxURL = new javax.swing.JTextField();
         jbnAdd = new javax.swing.JButton();
+        jbnListComics = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         jtbDownload = new javax.swing.JTable();
         jbnPause = new javax.swing.JButton();
@@ -106,6 +110,13 @@ public class DownloadComicsGUI extends javax.swing.JFrame implements Observer{
         jbnAdd.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
             	jbnAddActionPerformed(evt);
+            }
+        });
+        
+        jbnListComics.setText("List comics");
+        jbnListComics.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+            	jbnListComicsActionPerformed(evt);
             }
         });
 
@@ -150,7 +161,7 @@ public class DownloadComicsGUI extends javax.swing.JFrame implements Observer{
                 jbnZipActionPerformed(evt);
             }
         });
-        jlblAvancement.setText("");
+        jlblAvancement.setText("Download : ");
 
         jbnCancel.setText("Cancel");
         jbnCancel.setEnabled(false);
@@ -196,9 +207,10 @@ public class DownloadComicsGUI extends javax.swing.JFrame implements Observer{
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 177, Short.MAX_VALUE)
                         .addComponent(jbnExit, javax.swing.GroupLayout.PREFERRED_SIZE, 104, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(jtxURL, javax.swing.GroupLayout.DEFAULT_SIZE, 654, Short.MAX_VALUE)
+                        .addComponent(jtxURL, javax.swing.GroupLayout.DEFAULT_SIZE, /*654*/600, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jbnAdd))
+                        .addComponent(jbnAdd)
+                        .addComponent(jbnListComics))
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 776, Short.MAX_VALUE))
                 .addContainerGap())
         );
@@ -211,7 +223,8 @@ public class DownloadComicsGUI extends javax.swing.JFrame implements Observer{
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jtxURL, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jbnAdd))
+                    .addComponent(jbnAdd)
+                    .addComponent(jbnListComics))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 498, Short.MAX_VALUE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
@@ -269,48 +282,58 @@ public class DownloadComicsGUI extends javax.swing.JFrame implements Observer{
     				JOptionPane.showConfirmDialog(this, "Les pages ne sont pas encore toutes téléchargées, voulez-vous zipper quand même ?", "Attention", JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION )
     				return;
     		
+    		hasToZip = false;
     		for ( Tome t : tomes )
     		{
-    			ZipOutputStream out = null;
-    			try {
-	    			int BUFFER = 2048;
-	    			byte data[] = new byte[BUFFER];
-	    			FileOutputStream dest= new FileOutputStream(t.getFolder().getAbsolutePath() + ".cbz");
-	    			BufferedOutputStream buff = new BufferedOutputStream(dest);
-	    			out = new ZipOutputStream(buff);
-	    			out.setMethod(ZipOutputStream.DEFLATED);
-	    			out.setLevel(9);
-	    			
-	    			for(int i=0; i<t.getFolder().listFiles().length; i++) {
-	    			    FileInputStream fi = new FileInputStream(t.getFolder().listFiles()[i]);
-	    			    BufferedInputStream buffi = new BufferedInputStream(fi, BUFFER);
-	    			    ZipEntry entry= new ZipEntry(t.getFolder().listFiles()[i].getName());
-	    			    out.putNextEntry(entry);
-	    				
-	    			    int count;
-	    			    while((count = buffi.read(data, 0, BUFFER)) != -1) {
-	    			        out.write(data, 0, count);
-	    			    }
-	    				
-	    			    out.closeEntry();
-	    				
-	    			    buffi.close();
-	    			}
-	    			out.close();
-    			} catch (IOException e) {
-    				try { out.close(); } catch (IOException e1) { }
-    				JOptionPane.showMessageDialog(this, "Le tome " + t.getFolderName() + " n'a pas pu être zippé.", "Erreur", JOptionPane.ERROR_MESSAGE);
+    			if ( t.getFolder().exists() )
+    			{
+	    			ZipOutputStream out = null;
+	    			try {
+		    			int BUFFER = 2048;
+		    			byte data[] = new byte[BUFFER];
+		    			FileOutputStream dest= new FileOutputStream(t.getFolder().getAbsolutePath() + ".cbz");
+		    			BufferedOutputStream buff = new BufferedOutputStream(dest);
+		    			out = new ZipOutputStream(buff);
+		    			out.setMethod(ZipOutputStream.DEFLATED);
+		    			out.setLevel(9);
+		    			
+		    			for(int i=0; i<t.getFolder().listFiles().length; i++) {
+		    			    FileInputStream fi = new FileInputStream(t.getFolder().listFiles()[i]);
+		    			    BufferedInputStream buffi = new BufferedInputStream(fi, BUFFER);
+		    			    ZipEntry entry= new ZipEntry(t.getFolder().listFiles()[i].getName());
+		    			    out.putNextEntry(entry);
+		    				
+		    			    int count;
+		    			    while((count = buffi.read(data, 0, BUFFER)) != -1) {
+		    			        out.write(data, 0, count);
+		    			    }
+		    				
+		    			    out.closeEntry();
+		    				
+		    			    buffi.close();
+		    			}
+		    			out.close();
+		    			hasToZip = true;
+	    			} catch (Exception e) {
+	    				try { out.close(); } catch (IOException e1) { }
+	    				JOptionPane.showMessageDialog(this, "Le tome " + t.getFolderName() + " n'a pas pu être zippé.", "Erreur", JOptionPane.ERROR_MESSAGE);
+						e.printStackTrace();
+					}
+    			}
+    			else
+    				JOptionPane.showMessageDialog(this, "Le tome " + t.getFolderName() + " n'a pas pu être zippé, le dossier n'existe plus.", "Erreur", JOptionPane.ERROR_MESSAGE);
+    		}
+    		
+    		if ( hasToZip )
+    		{
+	    		JOptionPane.showMessageDialog(this, "Action terminée !", "Information", JOptionPane.INFORMATION_MESSAGE);
+	    		
+	    		try {
+					Desktop.getDesktop().open(FOLDER_OUT);
+				} catch (IOException e) {
 					e.printStackTrace();
 				}
     		}
-    		
-    		JOptionPane.showMessageDialog(this, "Zippage terminé !", "Information", JOptionPane.INFORMATION_MESSAGE);
-    		
-    		try {
-				Desktop.getDesktop().open(FOLDER_OUT);
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
     	}
     }//GEN-LAST:event_jbnRemoveActionPerformed
 
@@ -323,6 +346,7 @@ public class DownloadComicsGUI extends javax.swing.JFrame implements Observer{
     	
     	jtxURL.setEnabled(false);
 		jbnAdd.setEnabled(false);
+		jbnListComics.setEnabled(false);
 		
     	URL verifiedUrl = DownloadManager.verifyURL(jtxURL.getText());
         if (verifiedUrl != null) {
@@ -331,70 +355,154 @@ public class DownloadComicsGUI extends javax.swing.JFrame implements Observer{
         	
         	if ( webComic != null )
         	{
-	        	final SwingWorker<Void, Void> mySwingWorker = new SwingWorker<Void, Void>(){
-	        		@Override
-	        		protected Void doInBackground() {
-        				//DownloadManager.getInstance().SetNumConnPerDownload(1);
-	        			try {
-	        				tomes = webComic.getTomes();
-	        			} catch (IOException e)
-	        			{
-	        				jtxURL.setEnabled(true);
-	                		jbnAdd.setEnabled(true);
-	                		JOptionPane.showMessageDialog(DownloadComicsGUI.this, "Erreur lors de la récupération des tomes : \n" + e.toString(), "Error", JOptionPane.ERROR_MESSAGE);
-	                		return null;
-	        			}
-	        			
-	        			
-		        		Downloader download;
-		        		File folder;
-		        		URL pageUrl;
-		        		for ( Tome tome : tomes )
-		        		{
-		        			folder = new File(FOLDER_OUT.getAbsolutePath() + File.separator + tome.getFolderName());
-		    				if ( folder.exists() )
-		    					folder.delete();
-		    				folder.mkdir();
-		    				tome.setFolder(folder);
-		    				int i = 1;
-		    				for ( Page page : tome.getPages() )
-		    				{
-		    					pageUrl = DownloadManager.verifyURL(page.getUrl());
-					        	download = DownloadManager.getInstance().createDownload(pageUrl, folder.getAbsolutePath() + "/" + String.format("%03d", i) + "_");
-					        	mTableModel.addNewDownload(download);
-					        	
-					        	page.setDownloader(download);
-					        	i++;
-		    				}
-		        		}
-		        		
-				        return null;
-		    		}
-	        	};
-	        	
-	        	new Thread(){
-		    		@Override
-		    		public void run() {
-		    			new WaintingForDownload(DownloadComicsGUI.this, mySwingWorker, webComic);
-		    		}
-		    	}.start();
-		    	mySwingWorker.execute();
-		    	
+        		addComicToDownload(webComic);
         	}
         	else
         	{
         		jtxURL.setEnabled(true);
         		jbnAdd.setEnabled(true);
+        		jbnListComics.setEnabled(true);
         		JOptionPane.showMessageDialog(DownloadComicsGUI.this, "Ce site n'est pas géré", "Error", JOptionPane.ERROR_MESSAGE);
         	}
         } else {
         	jtxURL.setEnabled(true);
         	jbnAdd.setEnabled(true);
+        	jbnListComics.setEnabled(true);
             JOptionPane.showMessageDialog(DownloadComicsGUI.this, "Invalid Download URL", "Error", JOptionPane.ERROR_MESSAGE);
         }
     	
     }//GEN-LAST:event_jbnAddActionPerformed
 
+    private void jbnListComicsActionPerformed(java.awt.event.ActionEvent evt) 
+    {
+    	URL verifiedUrl = DownloadManager.verifyURL(jtxURL.getText());
+        if (verifiedUrl != null) {
+	    	
+	    	ListComicLite liste = WebComic.getListWebComics(verifiedUrl.toString());
+	    	
+	    	if ( liste != null )
+	    	{
+		    	DialogComicList dialogComics = new DialogComicList(liste);
+		    	dialogComics.setModal(true);
+		    	dialogComics.setLocationRelativeTo(this);
+		    	dialogComics.setVisible(true);
+	
+		    	if ( !dialogComics.isCanceled() )
+		    	{
+		    		jtxURL.setEnabled(false);
+		    		jbnAdd.setEnabled(false);
+		    		jbnListComics.setEnabled(false);
+		    		
+		    		for ( ComicLite comic : dialogComics.getComicsLite() )
+		    		{
+			        	verifiedUrl = DownloadManager.verifyURL(comic.getTomesLite().get(0).getUrl());
+			            if (verifiedUrl != null) {
+			            	
+			            	final WebComic webComic = WebComic.getWebComic(verifiedUrl.toString());
+			            	
+			            	if ( webComic != null )
+			            	{
+			            		addComicToDownload(webComic);
+			            	}
+			            	else
+			            	{
+			            		JOptionPane.showMessageDialog(DownloadComicsGUI.this, comic.getTitreCategory() + " -- Ce site n'est pas géré (" + comic.getTomesLite().get(0).getUrl() + ")", "Error", JOptionPane.ERROR_MESSAGE);
+			            	}
+			            } else {
+			                JOptionPane.showMessageDialog(DownloadComicsGUI.this, comic.getTitreCategory() + " -- Invalid Download URL (" + comic.getTomesLite().get(0).getUrl() + ")", "Error", JOptionPane.ERROR_MESSAGE);
+			            }
+		    		}
+		    		
+		    	}
+	    	} 
+	    	else {
+	        	JOptionPane.showMessageDialog(DownloadComicsGUI.this, "Ce site n'est pas géré", "Error", JOptionPane.ERROR_MESSAGE);
+	        }
+        }
+        else {
+	        JOptionPane.showMessageDialog(DownloadComicsGUI.this, "Invalid Download URL", "Error", JOptionPane.ERROR_MESSAGE);
+	    }
+    }
+    
+    
+    private void addComicToDownload(final WebComic webComic)
+    {
+    	final SwingWorker<Void, Void> mySwingWorker = new SwingWorker<Void, Void>(){
+    		@Override
+    		protected Void doInBackground() {
+				//DownloadManager.getInstance().SetNumConnPerDownload(1);
+    			
+    			List<Tome> tomesTmp;
+    			try {
+    				tomesTmp = webComic.getTomes();
+    			} catch (IOException e)
+    			{
+    				jtxURL.setEnabled(true);
+            		jbnAdd.setEnabled(true);
+            		jbnListComics.setEnabled(true);
+            		JOptionPane.showMessageDialog(DownloadComicsGUI.this, "Erreur lors de la récupération des tomes : \n" + e.toString(), "Error", JOptionPane.ERROR_MESSAGE);
+            		return null;
+    			}
+    			
+    			if ( tomes == null )
+					tomes = tomesTmp;
+				else
+					tomes.addAll(tomesTmp);
+    			
+        		Downloader download;
+        		File folder;
+        		URL pageUrl;
+        		for ( Tome tome : tomesTmp )
+        		{
+        			folder = new File(FOLDER_OUT.getAbsolutePath() + File.separator + tome.getFolderName());
+    				if ( folder.exists() )
+    					folder.delete();
+    				folder.mkdir();
+    				tome.setFolder(folder);
+    				int i = 1;
+    				for ( Page page : tome.getPages() )
+    				{
+    					pageUrl = DownloadManager.verifyURL(page.getUrl());
+			        	download = DownloadManager.getInstance().createDownload(pageUrl, folder.getAbsolutePath() + "/" + String.format("%03d", i) + "_");
+			        	mTableModel.addNewDownload(download);
+			        	
+			        	page.setDownloader(download);
+			        	i++;
+    				}
+        		}
+        		
+		        return null;
+    		}
+    	};
+    	
+    	new Thread(){
+    		@Override
+    		public void run() {
+    			new WaintingForDownload(DownloadComicsGUI.this, mySwingWorker, webComic);
+    		}
+    	}.start();
+    	mySwingWorker.execute();
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
  // Called when table row selection changes.
     private void tableSelectionChanged() {
     	// unregister from receiving notifications from the last selected download.
@@ -491,6 +599,7 @@ public class DownloadComicsGUI extends javax.swing.JFrame implements Observer{
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JButton jbnAdd;
+    private javax.swing.JButton jbnListComics;
     private javax.swing.JButton jbnCancel;
     private javax.swing.JButton jbnExit;
     private javax.swing.JButton jbnPause;

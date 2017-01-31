@@ -9,18 +9,16 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import com.luugiathuy.apps.downloadmanager.DownloadManager;
-
 import fr.feasil.comicDownloader.Page;
 import fr.feasil.comicDownloader.Tome;
 
 public class ViewComic2 extends WebComic {
 	
-	private final static int NB_MAX_TOMES = 200;
+//	private final static int NB_MAX_TOMES = 200;
 	
 	private String url;
 	
-	public ViewComic2(String url) 
+	protected ViewComic2(String url) 
 	{
 		this.url = url;
 	}
@@ -49,9 +47,9 @@ public class ViewComic2 extends WebComic {
 		Object[] o = {"total", urlTomes.size()};
 		notifyObservers(o);
 		
-		boolean afterGoodOne = false;
+//		boolean afterGoodOne = false;
 		Tome tome; Page page;
-		int i = 1;
+//		int i = 1;
 		int nbTome = 1;
 		for ( String urlTome : urlTomes )
 		{
@@ -60,12 +58,13 @@ public class ViewComic2 extends WebComic {
 			notifyObservers(o);
 			
 			
-			if ( url.equals(DownloadManager.verifyURL(urlTome).toString()) )
-				afterGoodOne = true;
-			if ( afterGoodOne )
+			//Si on ne veut pas prendre les tomes antérieurs
+//			if ( url.equals(DownloadManager.verifyURL(urlTome).toString()) )
+//				afterGoodOne = true;
+//			if ( afterGoodOne )
 			{
-				if ( i > NB_MAX_TOMES )
-					break;//TODO a dégager
+//				if ( i > NB_MAX_TOMES )
+//					break;
 			
 				doc = getDocument(urlTome);
 				
@@ -96,7 +95,7 @@ public class ViewComic2 extends WebComic {
 				//
 				
 				tomes.add(tome);
-				i++;
+//				i++;
 			}
 			nbTome++;
 		}

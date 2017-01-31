@@ -211,8 +211,8 @@ public class DownloadManager {
         }
         
         // Make sure URL specifies a file.
-        if (verifiedUrl.getFile().length() < 2)
-            return null;
+        //if (verifiedUrl.getFile().length() < 2)
+        //    return null;
         
         return verifiedUrl;
 	}
