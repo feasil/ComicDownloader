@@ -12,13 +12,12 @@ import org.jsoup.nodes.Document;
 import com.luugiathuy.apps.downloadmanager.DownloadManager;
 
 import fr.feasil.comicDownloader.Tome;
-import fr.feasil.comicDownloader.lite.ListComicLite;
 
 public abstract class WebComic extends Observable {
 	
-	private final static String URL_VIEWCOMIC = "http://viewcomic.com";
-	private final static String URL_VIEWCOMIC2 = "http://view-comic.com";
-	private final static String URL_READCOMICBOOKSONLINE = "http://readcomicbooksonline.com";
+	protected final static String URL_VIEWCOMIC = "http://viewcomic.com";
+	protected final static String URL_VIEWCOMIC2 = "http://view-comic.com";
+	protected final static String URL_READCOMICBOOKSONLINE = "http://readcomicbooksonline.com";
 	
 	private final static File FILE_LIST_COMIC_VIEWCOMIC = new File("list/viewComic.csv");
 	private final static File FILE_LIST_COMIC_VIEWCOMIC2 = new File("list/viewComic2.csv");
@@ -37,14 +36,15 @@ public abstract class WebComic extends Observable {
 		return null;
 	}
 	
-	public static ListComicLite getListWebComics(String url)
+	public static ListComicLiteViewComic getListWebComics(String url)
 	{
 		if ( url != null )
 		{
 			if ( url.toLowerCase().startsWith(URL_VIEWCOMIC) )
-				return new ListComicLite(FILE_LIST_COMIC_VIEWCOMIC);
-			else if ( url.toLowerCase().startsWith(URL_VIEWCOMIC2) )
-				return new ListComicLite(FILE_LIST_COMIC_VIEWCOMIC2);
+				return new ListComicLiteViewComic(FILE_LIST_COMIC_VIEWCOMIC);
+			//TODO
+//			else if ( url.toLowerCase().startsWith(URL_VIEWCOMIC2) )
+//				return new ListComicLiteViewComic(FILE_LIST_COMIC_VIEWCOMIC2);
 //			On ne gère pas les readcomicbooksonline pour le moment...
 //			else if ( url.toLowerCase().startsWith("http://readcomicbooksonline.com/") )
 //				return new ReadComicBooksOnline(url);

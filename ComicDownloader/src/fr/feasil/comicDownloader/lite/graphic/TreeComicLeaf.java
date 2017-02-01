@@ -54,6 +54,10 @@ public class TreeComicLeaf extends DefaultMutableTreeNode// implements Transfera
 	
 	@Override
 	public String toString() {
+		//Sert à naviguer dans le JTree
+		if ( getType() == EnumTreeComicLeaf.COMIC && getComic() != null && getComic().getTitreCategory() != null )
+			return getComic().getTitreCategory().toLowerCase();
+		
 		return "[" + getType() + ", " + getComic() + ", " +getTome() + "]";
 	}
 	

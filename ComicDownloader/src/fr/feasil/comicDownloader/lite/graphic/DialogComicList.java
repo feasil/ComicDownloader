@@ -7,11 +7,15 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
 import javax.swing.event.TreeSelectionEvent;
@@ -27,8 +31,12 @@ public class DialogComicList extends JDialog
 {
 	private static final long serialVersionUID = 1L;
 	
+	private static final DateFormat DF_AFFICHAGE_DATE = new SimpleDateFormat("dd/MM/yyyy");
+	
 	private JTree tree;
+	private TreeComicModel modelTree;
 	private JButton btnTelecharger;
+	private JButton btnUpdate;
 	
 	private ListComicLite liste;
 	
@@ -38,9 +46,11 @@ public class DialogComicList extends JDialog
 	public DialogComicList(ListComicLite liste)
 	{
 		super();
-		setTitle("Liste des comics - " + liste.getSite());
 		
 		this.liste = liste;
+		
+		updateTitle();
+		
 		
 		initFrame();
 		initComponents();
@@ -70,16 +80,9 @@ public class DialogComicList extends JDialog
 		TreeComicCellRenderer renderer = new TreeComicCellRenderer();
 		tree.setCellRenderer(renderer);
 		
-		TreeComicModel model = new TreeComicModel(liste);
-		tree.setModel(model);
+		modelTree = new TreeComicModel(liste);
+		tree.setModel(modelTree);
 		
-//		tree.addMouseListener(new MouseAdapter() {
-//			@Override
-//			public void mouseClicked(MouseEvent evt) {
-//				if ( evt.getClickCount() == 2 )
-//					actionTelecharger();
-//			}
-//		});
 		tree.addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyPressed(KeyEvent evt) {
@@ -91,36 +94,32 @@ public class DialogComicList extends JDialog
 			@Override
 			public void valueChanged(TreeSelectionEvent evt) {
 				
-				EnumTreeComicLeaf last = null;
-				for ( TreePath p : tree.getSelectionPaths() )
+				if ( tree.getSelectionPaths() != null )
 				{
-					if ( last == null )
-						last = ((TreeComicLeaf)p.getLastPathComponent()).getType();
-					else if ( last != ((TreeComicLeaf)p.getLastPathComponent()).getType() )
+					EnumTreeComicLeaf last = null;
+					for ( TreePath p : tree.getSelectionPaths() )
 					{
-						last = null;
-						break;
+						if ( last == null )
+							last = ((TreeComicLeaf)p.getLastPathComponent()).getType();
+						else if ( last != ((TreeComicLeaf)p.getLastPathComponent()).getType() )
+						{
+							last = null;
+							break;
+						}
 					}
-				}
-				
-				if ( last == EnumTreeComicLeaf.COMIC ) {
-					btnTelecharger.setEnabled(true);
-					if ( tree.getSelectionPaths().length == 1 )
-						btnTelecharger.setText("Télécharger le comic");
+					
+					if ( last == EnumTreeComicLeaf.COMIC ) {
+						btnTelecharger.setEnabled(true);
+						if ( tree.getSelectionPaths().length == 1 )
+							btnTelecharger.setText("Télécharger le comic");
+						else
+							btnTelecharger.setText("Télécharger les comics");
+					}
 					else
-						btnTelecharger.setText("Télécharger les comics");
-				}
-//				else if ( last == EnumTreeComicLeaf.TOME ) {
-//					btnTelecharger.setEnabled(true);
-//					if ( tree.getSelectionPaths().length == 1 )
-//						btnTelecharger.setText("Télécharger le tome");
-//					else
-//						btnTelecharger.setText("Télécharger les tomes");
-//				}
-				else
-				{
-					btnTelecharger.setEnabled(false);
-					btnTelecharger.setText("Télécharger");
+					{
+						btnTelecharger.setEnabled(false);
+						btnTelecharger.setText("Télécharger");
+					}
 				}
 			}
 		});
@@ -134,12 +133,20 @@ public class DialogComicList extends JDialog
 		btnTelecharger = new JButton("Télécharger");
 		btnTelecharger.addActionListener(new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent arg0) {
+			public void actionPerformed(ActionEvent evt) {
 				actionTelecharger();
 			}
 		});
 		btnTelecharger.setEnabled(false);
 		
+		
+		btnUpdate = new JButton("Update");
+		btnUpdate.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent evt) {
+				actionUpdate();
+			}
+		});
 	}
 	
 	private void addComponents() 
@@ -147,7 +154,12 @@ public class DialogComicList extends JDialog
 		setLayout(new BorderLayout());
 		
 		this.add(new JScrollPane(tree), BorderLayout.CENTER);
-		this.add(btnTelecharger, BorderLayout.SOUTH);
+		
+		JPanel panBtn = new JPanel(new BorderLayout());
+		panBtn.add(btnTelecharger, BorderLayout.CENTER);
+		panBtn.add(btnUpdate, BorderLayout.EAST);
+		
+		this.add(panBtn, BorderLayout.SOUTH);
 	}
 	
 	
@@ -165,7 +177,7 @@ public class DialogComicList extends JDialog
 				break;
 			}
 		}
-//		if ( type != null )
+		
 		if ( type == EnumTreeComicLeaf.COMIC )
 		{
 			comicsSelected = new ArrayList<ComicLite>();
@@ -174,10 +186,6 @@ public class DialogComicList extends JDialog
 				for ( TreePath p : tree.getSelectionPaths() )
 					comicsSelected.add(((TreeComicLeaf)p.getLastPathComponent()).getComic());
 				break;
-//			case TOME:
-//				for ( TreePath p : tree.getSelectionPaths() )
-//					tomesSelected.add(((TreeComicLeaf)p.getLastPathComponent()).getTome());
-//				break;
 				
 			default:
 				break;
@@ -189,6 +197,36 @@ public class DialogComicList extends JDialog
 	}
 	
 	
+	private void actionUpdate() {
+		int nbPages = liste.getNbPagesSite();
+		if ( liste.getNbPagesLues() == nbPages )
+		{
+			if ( JOptionPane.showConfirmDialog(this, "Aucune nouveauté ne semble être présente.\nVoulez-vous actualiser quand même ?", "Information", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION )
+				return ;
+		}
+		else if ( liste.getNbPagesLues() < nbPages )
+		{
+			if ( JOptionPane.showConfirmDialog(this, "Des nouveautés sont présentes sur le site.\nVoulez-vous mettre à jour le catalogue ?", "Information", JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION )
+				return ;
+		}
+		else
+			return;
+		
+		if ( liste.updateListComic() )
+		{
+			modelTree.setListe(liste);
+			modelTree.reload();
+			
+			updateTitle();
+		}
+	}
+	
+	
+	private void updateTitle() {
+		setTitle(liste.getSite() 
+				+ " - " + liste.getComicsLite().size() + " comics le " 
+				+ DF_AFFICHAGE_DATE.format(liste.getTimestampLecture()));
+	}
 	
 	
 	public boolean isCanceled() {

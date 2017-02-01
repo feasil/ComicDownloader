@@ -55,6 +55,8 @@
 			<patternset>
 				<include name="fr/feasil/comicDownloader/**/*.class" />
 				<include name="com/luugiathuy/apps/downloadmanager/*.class" />
+				
+				<include name="fr/feasil/images/*" />
 			</patternset>
 		</jar>
 	</target>

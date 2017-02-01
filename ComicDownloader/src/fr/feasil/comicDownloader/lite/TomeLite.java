@@ -2,18 +2,23 @@ package fr.feasil.comicDownloader.lite;
 
 public class TomeLite implements Comparable<TomeLite> {
 	
+	private final String titreBrut;
 	private final String titre;
 	private final String url;
 	private final String urlPreview;
 	private final long timestampAjout;
 	
-	public TomeLite(String titre, String url, String urlPreview, long timestampAjout) {
+	public TomeLite(String titreBrut, String titre, String url, String urlPreview, long timestampAjout) {
+		this.titreBrut = titreBrut;
 		this.titre = titre;
 		this.url = url;
 		this.urlPreview = urlPreview;
 		this.timestampAjout = timestampAjout;
 	}
 	
+	public String getTitreBrut() {
+		return titreBrut;
+	}
 	public String getTitre() {
 		return titre;
 	}
