@@ -1,31 +1,45 @@
 package fr.feasil.comicDownloader.lite.graphic;
 
+import java.awt.AlphaComposite;
+
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.Graphics2D;
 import java.awt.GridBagLayout;
+import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
+import javax.swing.SwingWorker;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
+import fr.feasil.comicDownloader.graphic.WaintingForDownload;
 import fr.feasil.comicDownloader.lite.ComicLite;
 import fr.feasil.comicDownloader.lite.ListComicLite;
-
+import fr.feasil.comicDownloader.lite.TomeLite;
+import fr.feasil.comicDownloader.webComic.WebComic;
 
 public class DialogComicList extends JDialog
 {
@@ -123,6 +137,89 @@ public class DialogComicList extends JDialog
 				}
 			}
 		});
+		tree.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if ( e.getClickCount() == 2 )
+				{
+					if ( tree.getSelectionPaths() != null
+							&& tree.getSelectionPaths().length == 1 
+							&& ((TreeComicLeaf)tree.getSelectionPaths()[0].getLastPathComponent()).getType() == EnumTreeComicLeaf.TOME )
+					{
+						final TomeLite tome = ((TreeComicLeaf)tree.getSelectionPaths()[0].getLastPathComponent()).getTome();
+						
+						final SwingWorker<BufferedImage, Void> mySwingWorker = new SwingWorker<BufferedImage, Void>(){
+				    		@Override
+				    		protected BufferedImage doInBackground() {
+				    			BufferedImage img;
+								try {
+									img = ImageIO.read(WebComic.getImage(tome.getUrlPreview()));
+								} catch (IOException e) {
+									e.printStackTrace();
+									return null;
+								}
+				    			return img;
+				    		}
+				    	};
+				    	mySwingWorker.execute();
+				    	
+				    	new WaintingForDownload(DialogComicList.this, mySwingWorker, liste);
+				    	
+				    	BufferedImage img;
+						try {
+							img = mySwingWorker.get();
+						} catch (Exception e1) {
+							e1.printStackTrace();
+							JOptionPane.showMessageDialog(DialogComicList.this, "Erreur lors du chargement de la preview...", "Error", JOptionPane.ERROR_MESSAGE);
+							return;
+						}
+						
+						
+						//Resize de l'image
+						int thumbnailWidth = 500;
+						int widthToScale, heightToScale;
+						if (img.getWidth() > img.getHeight()) {
+						    heightToScale = (int)(1.1 * thumbnailWidth);
+						    widthToScale = (int)((heightToScale * 1.0) / img.getHeight() * img.getWidth());
+						} else {
+						    widthToScale = (int)(1.1 * thumbnailWidth);
+						    heightToScale = (int)((widthToScale * 1.0) / img.getWidth() * img.getHeight());
+						}
+						BufferedImage resizedImage = new BufferedImage(widthToScale, 
+						heightToScale, img.getType());
+						Graphics2D g = resizedImage.createGraphics();
+						g.setComposite(AlphaComposite.Src);
+						g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+						g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+						g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+						g.drawImage(img, 0, 0, widthToScale, heightToScale, null);
+						g.dispose();
+						//------
+						
+						
+						final JDialog dialog = new JDialog();     
+						dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+						dialog.setTitle(tome.getTitre() + " preview");
+						
+						
+						JLabel lbl = new JLabel(new ImageIcon(resizedImage));
+						lbl.addMouseListener(new MouseAdapter() {
+							@Override
+							public void mouseClicked(MouseEvent e) {
+								dialog.dispose();
+							}
+						});
+						
+						dialog.add(lbl);
+						
+						dialog.pack();
+						dialog.setModal(true);
+						dialog.setLocationRelativeTo(DialogComicList.this);
+						dialog.setVisible(true);
+					}
+				}
+			}
+		});
 		
 		
 		tree.setRootVisible(false);
@@ -212,13 +309,28 @@ public class DialogComicList extends JDialog
 		else
 			return;
 		
-		if ( liste.updateListComic() )
-		{
-			modelTree.setListe(liste);
-			modelTree.reload();
-			
-			updateTitle();
-		}
+		
+		final SwingWorker<Void, Void> mySwingWorker = new SwingWorker<Void, Void>(){
+    		@Override
+    		protected Void doInBackground() {
+    			
+    			if ( liste.updateListComic() )
+    			{
+    				modelTree.setListe(liste);
+    				modelTree.reload();
+    				
+    				updateTitle();
+    			}
+    			else 
+    				JOptionPane.showMessageDialog(DialogComicList.this, "Erreur lors de l'update...", "Error", JOptionPane.ERROR_MESSAGE);
+    			
+				return null;
+    		}
+    	};
+    	mySwingWorker.execute();
+    	
+    	new WaintingForDownload(DialogComicList.this, mySwingWorker, liste);
+		
 	}
 	
 	

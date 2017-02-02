@@ -34,7 +34,6 @@ public class ListComicLiteViewComic extends ListComicLite {
 	
 	public ListComicLiteViewComic(File fichier) {
 		this.fichier = fichier;
-		readFile();
 	}
 	
 	@Override
@@ -58,9 +57,8 @@ public class ListComicLiteViewComic extends ListComicLite {
 	}
 	
 	
-	
-	
-	private void readFile()
+	@Override
+	public void readFile()
 	{
 		readUpdateFile(null, -1);
 	}
@@ -305,10 +303,17 @@ public class ListComicLiteViewComic extends ListComicLite {
 			List<String> newComicsLite = new ArrayList<String>();
 			
 			try {
+				setChanged();
+				Object[] o = {"total", (nbPagesSite - getNbPagesLues())+1};
+				notifyObservers(o);
 				
 				// On scanne les nouvelles pages avec une de plus (au cas où des éléments y auraient été ajoutés)   
 				for ( int numeroPage = 1 ; numeroPage <= (nbPagesSite - getNbPagesLues())+1 ; numeroPage++ )
 				{
+					setChanged();
+					o = new Object[]{"avancement", numeroPage-1};
+					notifyObservers(o);
+					
 					doc = WebComic.getDocument(WebComic.URL_VIEWCOMIC + "/page/" + Integer.toString(numeroPage));
 					
 					Element divPostArea = doc.select("div#post-area").get(0);
@@ -370,6 +375,10 @@ public class ListComicLiteViewComic extends ListComicLite {
 					}
 					
 				}
+				
+				setChanged();
+				o = new Object[]{"infinite"};
+				notifyObservers(o);
 				
 			} catch (IOException e1) {
 				e1.printStackTrace();

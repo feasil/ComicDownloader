@@ -2,6 +2,9 @@ package fr.feasil.comicDownloader.webComic;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.List;
 import java.util.Observable;
 
@@ -12,6 +15,7 @@ import org.jsoup.nodes.Document;
 import com.luugiathuy.apps.downloadmanager.DownloadManager;
 
 import fr.feasil.comicDownloader.Tome;
+import fr.feasil.comicDownloader.lite.ListComicLite;
 
 public abstract class WebComic extends Observable {
 	
@@ -36,7 +40,7 @@ public abstract class WebComic extends Observable {
 		return null;
 	}
 	
-	public static ListComicLiteViewComic getListWebComics(String url)
+	public static ListComicLite getListWebComics(String url)
 	{
 		if ( url != null )
 		{
@@ -44,7 +48,7 @@ public abstract class WebComic extends Observable {
 				return new ListComicLiteViewComic(FILE_LIST_COMIC_VIEWCOMIC);
 			//TODO
 //			else if ( url.toLowerCase().startsWith(URL_VIEWCOMIC2) )
-//				return new ListComicLiteViewComic(FILE_LIST_COMIC_VIEWCOMIC2);
+//				return new ListComicLiteViewComic2(FILE_LIST_COMIC_VIEWCOMIC2);
 //			On ne gère pas les readcomicbooksonline pour le moment...
 //			else if ( url.toLowerCase().startsWith("http://readcomicbooksonline.com/") )
 //				return new ReadComicBooksOnline(url);
@@ -85,4 +89,18 @@ public abstract class WebComic extends Observable {
 		
 		return conn.timeout(30000).userAgent("Mozilla").get();
 	}
+	
+	public static InputStream getImage(String urlstr) throws IOException 
+    {
+		URL url = new URL(urlstr);
+		URLConnection conn = null;
+		if ( DownloadManager.getInstance().useProxy() )
+			conn = url.openConnection(DownloadManager.getInstance().getProxy());
+		else
+			conn = url.openConnection();
+		
+		InputStream in = conn.getInputStream();
+		return in;
+    }
+	
 }

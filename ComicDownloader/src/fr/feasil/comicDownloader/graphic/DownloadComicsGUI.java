@@ -378,7 +378,17 @@ public class DownloadComicsGUI extends javax.swing.JFrame implements Observer{
     	URL verifiedUrl = DownloadManager.verifyURL(jtxURL.getText());
         if (verifiedUrl != null) {
 	    	
-	    	ListComicLite liste = WebComic.getListWebComics(verifiedUrl.toString());
+        	final ListComicLite liste = WebComic.getListWebComics(verifiedUrl.toString());
+        	
+        	final SwingWorker<Void, Void> mySwingWorker = new SwingWorker<Void, Void>(){
+        		@Override
+        		protected Void doInBackground() {
+        			liste.readFile();
+					return null;
+        		}
+        	};
+        	mySwingWorker.execute();
+        	new WaintingForDownload(DownloadComicsGUI.this, mySwingWorker, liste);
 	    	
 	    	if ( liste != null )
 	    	{
@@ -406,9 +416,15 @@ public class DownloadComicsGUI extends javax.swing.JFrame implements Observer{
 			            	}
 			            	else
 			            	{
+			            		jtxURL.setEnabled(true);
+			            		jbnAdd.setEnabled(true);
+			            		jbnListComics.setEnabled(true);
 			            		JOptionPane.showMessageDialog(DownloadComicsGUI.this, comic.getTitreCategory() + " -- Ce site n'est pas géré (" + comic.getTomesLite().get(0).getUrl() + ")", "Error", JOptionPane.ERROR_MESSAGE);
 			            	}
 			            } else {
+			            	jtxURL.setEnabled(true);
+			        		jbnAdd.setEnabled(true);
+			        		jbnListComics.setEnabled(true);
 			                JOptionPane.showMessageDialog(DownloadComicsGUI.this, comic.getTitreCategory() + " -- Invalid Download URL (" + comic.getTomesLite().get(0).getUrl() + ")", "Error", JOptionPane.ERROR_MESSAGE);
 			            }
 		    		}
@@ -437,9 +453,9 @@ public class DownloadComicsGUI extends javax.swing.JFrame implements Observer{
     				tomesTmp = webComic.getTomes();
     			} catch (IOException e)
     			{
-    				jtxURL.setEnabled(true);
-            		jbnAdd.setEnabled(true);
-            		jbnListComics.setEnabled(true);
+//    				jtxURL.setEnabled(true);
+//            		jbnAdd.setEnabled(true);
+//            		jbnListComics.setEnabled(true);
             		JOptionPane.showMessageDialog(DownloadComicsGUI.this, "Erreur lors de la récupération des tomes : \n" + e.toString(), "Error", JOptionPane.ERROR_MESSAGE);
             		return null;
     			}
