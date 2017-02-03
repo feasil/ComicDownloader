@@ -19,7 +19,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import fr.feasil.comicDownloader.lite.ComicLite;
-import fr.feasil.comicDownloader.lite.ListComicLite;
 import fr.feasil.comicDownloader.lite.TomeLite;
 
 public class ListComicLiteViewComic2 extends ListComicLite {

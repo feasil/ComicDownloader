@@ -1,12 +1,8 @@
 package fr.feasil.comicDownloader.lite.graphic;
 
-import java.awt.AlphaComposite;
-
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.Graphics2D;
 import java.awt.GridBagLayout;
-import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
@@ -14,13 +10,11 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -37,25 +31,27 @@ import javax.swing.tree.TreeSelectionModel;
 
 import fr.feasil.comicDownloader.graphic.WaintingForDownload;
 import fr.feasil.comicDownloader.lite.ComicLite;
-import fr.feasil.comicDownloader.lite.ListComicLite;
 import fr.feasil.comicDownloader.lite.TomeLite;
-import fr.feasil.comicDownloader.webComic.WebComic;
+import fr.feasil.comicDownloader.webComic.ListComicLite;
 
 public class DialogComicList extends JDialog
 {
 	private static final long serialVersionUID = 1L;
 	
+	private static final ImageIcon IMAGE_THUMB_WAIT = new ImageIcon(DialogComicList.class.getResource("/fr/feasil/images/thumb_wait_500_750.png"));
 	private static final DateFormat DF_AFFICHAGE_DATE = new SimpleDateFormat("dd/MM/yyyy");
 	
 	private JTree tree;
 	private TreeComicModel modelTree;
 	private JButton btnTelecharger;
 	private JButton btnUpdate;
+	private JButton btnSort;
 	
 	private ListComicLite liste;
 	
 	private boolean isCanceled = true;
 	private List<ComicLite> comicsSelected;
+	private boolean sortByDate = true;
 	
 	public DialogComicList(ListComicLite liste)
 	{
@@ -101,7 +97,10 @@ public class DialogComicList extends JDialog
 			@Override
 			public void keyPressed(KeyEvent evt) {
 				if ( evt.getKeyCode() == KeyEvent.VK_ENTER )
-					actionTelecharger();
+				{
+					//actionTelecharger();
+					actionPreview();
+				}
 			}
 		});
 		tree.addTreeSelectionListener(new TreeSelectionListener() {
@@ -145,78 +144,7 @@ public class DialogComicList extends JDialog
 					if ( tree.getSelectionPaths() != null
 							&& tree.getSelectionPaths().length == 1 
 							&& ((TreeComicLeaf)tree.getSelectionPaths()[0].getLastPathComponent()).getType() == EnumTreeComicLeaf.TOME )
-					{
-						final TomeLite tome = ((TreeComicLeaf)tree.getSelectionPaths()[0].getLastPathComponent()).getTome();
-						
-						final SwingWorker<BufferedImage, Void> mySwingWorker = new SwingWorker<BufferedImage, Void>(){
-				    		@Override
-				    		protected BufferedImage doInBackground() {
-				    			BufferedImage img;
-								try {
-									img = ImageIO.read(WebComic.getImage(tome.getUrlPreview()));
-								} catch (IOException e) {
-									e.printStackTrace();
-									return null;
-								}
-				    			return img;
-				    		}
-				    	};
-				    	mySwingWorker.execute();
-				    	
-				    	new WaintingForDownload(DialogComicList.this, mySwingWorker, liste);
-				    	
-				    	BufferedImage img;
-						try {
-							img = mySwingWorker.get();
-						} catch (Exception e1) {
-							e1.printStackTrace();
-							JOptionPane.showMessageDialog(DialogComicList.this, "Erreur lors du chargement de la preview...", "Error", JOptionPane.ERROR_MESSAGE);
-							return;
-						}
-						
-						
-						//Resize de l'image
-						int thumbnailWidth = 500;
-						int widthToScale, heightToScale;
-						if (img.getWidth() > img.getHeight()) {
-						    heightToScale = (int)(1.1 * thumbnailWidth);
-						    widthToScale = (int)((heightToScale * 1.0) / img.getHeight() * img.getWidth());
-						} else {
-						    widthToScale = (int)(1.1 * thumbnailWidth);
-						    heightToScale = (int)((widthToScale * 1.0) / img.getWidth() * img.getHeight());
-						}
-						BufferedImage resizedImage = new BufferedImage(widthToScale, 
-						heightToScale, img.getType());
-						Graphics2D g = resizedImage.createGraphics();
-						g.setComposite(AlphaComposite.Src);
-						g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-						g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-						g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-						g.drawImage(img, 0, 0, widthToScale, heightToScale, null);
-						g.dispose();
-						//------
-						
-						
-						final JDialog dialog = new JDialog();     
-						dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-						dialog.setTitle(tome.getTitre() + " preview");
-						
-						
-						JLabel lbl = new JLabel(new ImageIcon(resizedImage));
-						lbl.addMouseListener(new MouseAdapter() {
-							@Override
-							public void mouseClicked(MouseEvent e) {
-								dialog.dispose();
-							}
-						});
-						
-						dialog.add(lbl);
-						
-						dialog.pack();
-						dialog.setModal(true);
-						dialog.setLocationRelativeTo(DialogComicList.this);
-						dialog.setVisible(true);
-					}
+						actionPreview();
 				}
 			}
 		});
@@ -244,11 +172,21 @@ public class DialogComicList extends JDialog
 				actionUpdate();
 			}
 		});
+		
+		btnSort = new JButton("Trier par Date d'ajout");
+		btnSort.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent evt) {
+				actionSort();
+			}
+		});
 	}
 	
 	private void addComponents() 
 	{
 		setLayout(new BorderLayout());
+		
+		this.add(btnSort, BorderLayout.NORTH);
 		
 		this.add(new JScrollPane(tree), BorderLayout.CENTER);
 		
@@ -330,7 +268,110 @@ public class DialogComicList extends JDialog
     	mySwingWorker.execute();
     	
     	new WaintingForDownload(DialogComicList.this, mySwingWorker, liste);
-		
+	}
+	
+	private void actionPreview() {
+		if ( tree.getSelectionPaths() != null
+				&& tree.getSelectionPaths().length == 1 )
+		{
+			TomeLite tomeTmp; 
+			if ( ((TreeComicLeaf)tree.getSelectionPaths()[0].getLastPathComponent()).getType() == EnumTreeComicLeaf.TOME )
+				tomeTmp = ((TreeComicLeaf)tree.getSelectionPaths()[0].getLastPathComponent()).getTome();
+			else if ( ((TreeComicLeaf)tree.getSelectionPaths()[0].getLastPathComponent()).getType() == EnumTreeComicLeaf.COMIC )
+			{
+				if ( ((TreeComicLeaf)tree.getSelectionPaths()[0].getLastPathComponent()).getComic().getTomesLite().size() > 0 )
+					tomeTmp = ((TreeComicLeaf)tree.getSelectionPaths()[0].getLastPathComponent()).getComic().getTomesLite().get(0);
+				else
+					return;
+			}
+			else
+				return;
+			
+			final TomeLite tome = tomeTmp;
+			
+			final JDialog dialog = new JDialog();     
+			dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+			dialog.setTitle(tome.getTitre() + " preview");
+			
+			dialog.addKeyListener(new KeyAdapter() {
+				@Override
+				public void keyPressed(KeyEvent evt) {
+					if ( evt.getKeyCode() == KeyEvent.VK_ENTER
+							|| evt.getKeyCode() == KeyEvent.VK_ESCAPE )
+						dialog.dispose();
+				}
+			});
+			
+			final JLabel lbl = new JLabel(IMAGE_THUMB_WAIT);
+			lbl.addMouseListener(new MouseAdapter() {
+				@Override
+				public void mouseClicked(MouseEvent e) {
+					dialog.dispose();
+				}
+			});
+			
+			
+			dialog.add(lbl);
+			
+			new Thread(){
+				@Override
+				public void run() {
+					final SwingWorker<BufferedImage, Void> mySwingWorker = new SwingWorker<BufferedImage, Void>(){
+			    		@Override
+			    		protected BufferedImage doInBackground() {
+							return ListComicLite.getPreview(tome, true);
+			    		}
+			    	};
+			    	mySwingWorker.execute();
+			    	
+			    	new WaintingForDownload(/*DialogComicList.this*/dialog, mySwingWorker, liste);
+			    	
+			    	BufferedImage img = null;
+					try {
+						img = mySwingWorker.get();
+					} catch (Exception e1) {
+						e1.printStackTrace();
+						img = null;
+					}
+					if ( img == null )
+					{
+						JOptionPane.showMessageDialog(DialogComicList.this, "Erreur lors du chargement de la preview...", "Error", JOptionPane.ERROR_MESSAGE);
+						dialog.dispose();
+						return;
+					}
+					
+					lbl.setIcon(new ImageIcon(img));
+					dialog.pack();
+				}
+			}.start();
+			
+			
+			dialog.pack();
+			dialog.setModal(true);
+			dialog.setLocationRelativeTo(DialogComicList.this);
+			dialog.setVisible(true);
+		}
+	}
+	
+	
+	
+	private void actionSort() 
+	{
+		if ( sortByDate )
+		{
+			liste.sortByDate();
+			modelTree.setListe(liste);
+			modelTree.reload();
+			btnSort.setText("Trier par Nom");
+		}
+		else
+		{
+			liste.sortByName();
+			modelTree.setListe(liste);
+			modelTree.reload();
+			btnSort.setText("Trier par Date d'ajout");
+		}
+		sortByDate = !sortByDate;
 	}
 	
 	

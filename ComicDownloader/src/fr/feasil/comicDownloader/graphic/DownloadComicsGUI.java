@@ -33,8 +33,8 @@ import com.luugiathuy.apps.downloadmanager.ProgressRenderer;
 import fr.feasil.comicDownloader.Page;
 import fr.feasil.comicDownloader.Tome;
 import fr.feasil.comicDownloader.lite.ComicLite;
-import fr.feasil.comicDownloader.lite.ListComicLite;
 import fr.feasil.comicDownloader.lite.graphic.DialogComicList;
+import fr.feasil.comicDownloader.webComic.ListComicLite;
 import fr.feasil.comicDownloader.webComic.WebComic;
 
 public class DownloadComicsGUI extends javax.swing.JFrame implements Observer{
@@ -92,6 +92,7 @@ public class DownloadComicsGUI extends javax.swing.JFrame implements Observer{
 
         jtxURL = new javax.swing.JTextField();
         jbnAdd = new javax.swing.JButton();
+        jlblOr = new javax.swing.JLabel(" or ");
         jbnListComics = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         jtbDownload = new javax.swing.JTable();
@@ -210,6 +211,7 @@ public class DownloadComicsGUI extends javax.swing.JFrame implements Observer{
                         .addComponent(jtxURL, javax.swing.GroupLayout.DEFAULT_SIZE, /*654*/600, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jbnAdd)
+                        .addComponent(jlblOr)
                         .addComponent(jbnListComics))
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 776, Short.MAX_VALUE))
                 .addContainerGap())
@@ -224,6 +226,7 @@ public class DownloadComicsGUI extends javax.swing.JFrame implements Observer{
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jtxURL, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jbnAdd)
+                    .addComponent(jlblOr)
                     .addComponent(jbnListComics))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 498, Short.MAX_VALUE)
@@ -257,13 +260,6 @@ public class DownloadComicsGUI extends javax.swing.JFrame implements Observer{
     }//GEN-LAST:event_jbnCancelActionPerformed
 
     private void jbnZipActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbnRemoveActionPerformed
-    	/*mIsClearing = true;
-    	int index = jtbDownload.getSelectedRow();
-    	DownloadManager.getInstance().removeDownload(index);
-    	mTableModel.clearDownload(index);
-        mIsClearing = false;
-        mSelectedDownloader = null;
-        updateButtons();*/
     	
     	if( tomes != null )
     	{
@@ -375,7 +371,8 @@ public class DownloadComicsGUI extends javax.swing.JFrame implements Observer{
 
     private void jbnListComicsActionPerformed(java.awt.event.ActionEvent evt) 
     {
-    	URL verifiedUrl = DownloadManager.verifyURL(jtxURL.getText());
+    	//URL verifiedUrl = DownloadManager.verifyURL(jtxURL.getText());
+    	URL verifiedUrl = DownloadManager.verifyURL("http://viewcomic.com");
         if (verifiedUrl != null) {
 	    	
         	final ListComicLite liste = WebComic.getListWebComics(verifiedUrl.toString());
@@ -615,6 +612,7 @@ public class DownloadComicsGUI extends javax.swing.JFrame implements Observer{
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JButton jbnAdd;
+    private javax.swing.JLabel jlblOr;
     private javax.swing.JButton jbnListComics;
     private javax.swing.JButton jbnCancel;
     private javax.swing.JButton jbnExit;

@@ -1,6 +1,7 @@
 package fr.feasil.comicDownloader.lite;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class ComicLite implements Comparable<ComicLite> {
@@ -9,6 +10,7 @@ public class ComicLite implements Comparable<ComicLite> {
 	private final String titreCategory;
 	private final String titreViaTome;
 	private final List<TomeLite> tomesLite;
+	private long lastAjoutTome = 0;
 	
 	public ComicLite(String category, String titreCategory, String titreViaTome) {
 		this.category = category;
@@ -31,6 +33,7 @@ public class ComicLite implements Comparable<ComicLite> {
 	
 	public void addTomeLite(TomeLite tomeLite) {
 		tomesLite.add(tomeLite);
+		lastAjoutTome = Math.max(lastAjoutTome, tomeLite.getTimestampAjout());
 	}
 	public List<TomeLite> getTomesLite() {
 		return tomesLite;
@@ -52,4 +55,26 @@ public class ComicLite implements Comparable<ComicLite> {
 		return getCategory().compareTo(c.getCategory());
 	}
 	
+	
+	
+	
+	public static class ComparatorDate implements Comparator<ComicLite> {
+		@Override
+		public int compare(ComicLite c1, ComicLite c2) {
+			if ( c1 == c2 )
+				return 0;
+			if ( c1 == null )
+				return -1;
+			if ( c2 == null )
+				return 1;
+			if ( c1.lastAjoutTome == c2.lastAjoutTome )
+				return c1.compareTo(c2);
+			if ( c1.lastAjoutTome > c2.lastAjoutTome )
+				return -1;
+			else
+				return 1;
+		}
+	}
+	
 }
+

@@ -10,7 +10,6 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -19,7 +18,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import fr.feasil.comicDownloader.lite.ComicLite;
-import fr.feasil.comicDownloader.lite.ListComicLite;
 import fr.feasil.comicDownloader.lite.TomeLite;
 
 public class ListComicLiteViewComic extends ListComicLite {
@@ -81,7 +79,12 @@ public class ListComicLiteViewComic extends ListComicLite {
 		
 		try {
 			if ( !fichier.exists() )
+			{
+				if ( !fichier.getParentFile().exists() )
+					fichier.getParentFile().mkdirs();
+				
 				fichier.createNewFile();
+			}
 			bReader = new BufferedReader(new FileReader(fichier));
 			if ( updateMode )
 			{
@@ -167,9 +170,7 @@ public class ListComicLiteViewComic extends ListComicLite {
 		}
 		
 		
-		Collections.sort(comicsLite);
-		for ( ComicLite c : comicsLite )
-			Collections.sort(c.getTomesLite());
+		sortByName();
 	}
 	
 	private void addToListComicsLite(String line, BufferedWriter bWriter) throws IOException
@@ -432,7 +433,5 @@ public class ListComicLiteViewComic extends ListComicLite {
 		
 		return -1;
 	}
-	
-	
-	
+		
 }

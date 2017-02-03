@@ -3,8 +3,8 @@ package fr.feasil.comicDownloader.lite.graphic;
 import javax.swing.tree.DefaultTreeModel;
 
 import fr.feasil.comicDownloader.lite.ComicLite;
-import fr.feasil.comicDownloader.lite.ListComicLite;
 import fr.feasil.comicDownloader.lite.TomeLite;
+import fr.feasil.comicDownloader.webComic.ListComicLite;
 
 public class TreeComicModel extends DefaultTreeModel
 {

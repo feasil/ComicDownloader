@@ -1,5 +1,7 @@
 package fr.feasil.comicDownloader.lite;
 
+import java.util.Comparator;
+
 public class TomeLite implements Comparable<TomeLite> {
 	
 	private final String titreBrut;
@@ -46,4 +48,25 @@ public class TomeLite implements Comparable<TomeLite> {
 			return 1;
 		return getTitre().compareTo(t.getTitre());
 	}
+	
+	
+	
+	public static class ComparatorDate implements Comparator<TomeLite> {
+		@Override
+		public int compare(TomeLite t1, TomeLite t2) {
+			if ( t1 == t2 )
+				return 0;
+			if ( t1 == null )
+				return -1;
+			if ( t2 == null )
+				return 1;
+			if ( t1.timestampAjout == t2.timestampAjout )
+				return t1.compareTo(t2);
+			if ( t1.timestampAjout > t2.timestampAjout )
+				return -1;
+			else
+				return 1;
+		}
+	}
+	
 }

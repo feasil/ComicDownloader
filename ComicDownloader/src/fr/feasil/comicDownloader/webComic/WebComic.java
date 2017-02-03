@@ -15,7 +15,6 @@ import org.jsoup.nodes.Document;
 import com.luugiathuy.apps.downloadmanager.DownloadManager;
 
 import fr.feasil.comicDownloader.Tome;
-import fr.feasil.comicDownloader.lite.ListComicLite;
 
 public abstract class WebComic extends Observable {
 	
@@ -90,7 +89,7 @@ public abstract class WebComic extends Observable {
 		return conn.timeout(30000).userAgent("Mozilla").get();
 	}
 	
-	public static InputStream getImage(String urlstr) throws IOException 
+	protected static InputStream getImage(String urlstr) throws IOException 
     {
 		URL url = new URL(urlstr);
 		URLConnection conn = null;
