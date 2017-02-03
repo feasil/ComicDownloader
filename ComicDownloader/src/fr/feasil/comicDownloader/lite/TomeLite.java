@@ -14,7 +14,10 @@ public class TomeLite implements Comparable<TomeLite> {
 		this.titreBrut = titreBrut;
 		this.titre = titre;
 		this.url = url;
-		this.urlPreview = urlPreview;
+		if ( urlPreview != null && urlPreview.startsWith("//") )
+			this.urlPreview = "http:" + urlPreview;
+		else
+			this.urlPreview = urlPreview;
 		this.timestampAjout = timestampAjout;
 	}
 	
