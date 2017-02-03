@@ -1,6 +1,7 @@
 package fr.feasil.comicDownloader.graphic;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.Observable;
@@ -14,30 +15,38 @@ import javax.swing.JProgressBar;
 import javax.swing.SwingWorker;
 import javax.swing.WindowConstants;
 
-import fr.feasil.comicDownloader.webComic.WebComic;
-
 public class WaintingForDownload extends JDialog implements Observer {
 
 	private static final long serialVersionUID = 1L;
 	
 	private JProgressBar progressBar;
 
-	public WaintingForDownload(JFrame parent, SwingWorker<Void, Void> mySwingWorker, final WebComic webComic) {
+	public WaintingForDownload(JFrame parent, SwingWorker<?, ?> mySwingWorker, final Observable obs) {
 		super(parent, "Dialog", true);
 		
+		init(parent, mySwingWorker, obs);
+	}
+	public WaintingForDownload(JDialog parent, SwingWorker<?, ?> mySwingWorker, final Observable obs) {
+		super(parent, "Dialog", true);
+		
+		init(parent, mySwingWorker, obs);
+	}
+	
+	private void init(Component parent, SwingWorker<?, ?> mySwingWorker, final Observable obs) 
+	{
 		mySwingWorker.addPropertyChangeListener(new PropertyChangeListener() {
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
 				if (evt.getPropertyName().equals("state")) {
 					if (evt.getNewValue() == SwingWorker.StateValue.DONE) {
-						webComic.deleteObserver(WaintingForDownload.this);
+						obs.deleteObserver(WaintingForDownload.this);
 						dispose();
 					}
 				}
 			}
 		});
 		
-		webComic.addObserver(this);
+		obs.addObserver(this);
 		
 		setUndecorated(true);
 		setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
@@ -53,9 +62,8 @@ public class WaintingForDownload extends JDialog implements Observer {
 		pack();
 		setLocationRelativeTo(parent);
 		setVisible(true);
-		
-		
 	}
+	
 
 	@Override
 	public void update(Observable arg0, Object arg1) {
@@ -71,6 +79,15 @@ public class WaintingForDownload extends JDialog implements Observer {
 			else if ( "avancement".equals(o[0]) )
 			{
 				progressBar.setValue((Integer) o[1]);
+			}
+		}
+		else if ( arg1 instanceof Object[] && ((Object[]) arg1).length == 1 )
+		{
+			Object[] o = (Object[]) arg1;
+			if ( "infinite".equals(o[0]) )
+			{
+				progressBar.setIndeterminate(true);
+				progressBar.setStringPainted(false);
 			}
 		}
 	}

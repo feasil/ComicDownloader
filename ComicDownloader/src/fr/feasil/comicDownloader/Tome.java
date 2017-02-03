@@ -25,7 +25,7 @@ public class Tome {
 		return titre;
 	}
 	public String getFolderName() {
-		return String.format("%03d", numero) + "-" + titre;
+		return String.format("%03d", numero) + "-" + titre.replace(":", "").trim();
 	}
 	
 	

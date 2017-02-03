@@ -16,7 +16,7 @@ public class ReadComicBooksOnline extends WebComic {
 	private final static String URL = "http://readcomicbooksonline.com/reader/";
 	private String url;
 	
-	public ReadComicBooksOnline(String url) 
+	protected ReadComicBooksOnline(String url) 
 	{
 		this.url = url;
 	}

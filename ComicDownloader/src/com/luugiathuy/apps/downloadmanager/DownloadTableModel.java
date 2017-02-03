@@ -46,7 +46,7 @@ public class DownloadTableModel extends AbstractTableModel implements Observer {
     /**
      *  Add a new download to the table.
      */
-    public void addNewDownload(Downloader download) {
+    public synchronized void addNewDownload(Downloader download) {
         // Register to be notified when the download changes.
         download.addObserver(this);
         
