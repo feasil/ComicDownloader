@@ -39,14 +39,16 @@ public class WaintingForDownload extends JDialog implements Observer {
 			public void propertyChange(PropertyChangeEvent evt) {
 				if (evt.getPropertyName().equals("state")) {
 					if (evt.getNewValue() == SwingWorker.StateValue.DONE) {
-						obs.deleteObserver(WaintingForDownload.this);
+						if ( obs != null )
+							obs.deleteObserver(WaintingForDownload.this);
 						dispose();
 					}
 				}
 			}
 		});
 		
-		obs.addObserver(this);
+		if ( obs != null )
+			obs.addObserver(this);
 		
 		setUndecorated(true);
 		setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);

@@ -1,6 +1,10 @@
 package fr.feasil.comicDownloader.lite;
 
+import java.io.IOException;
 import java.util.Comparator;
+
+import fr.feasil.comicDownloader.Tome;
+import fr.feasil.comicDownloader.webComic.WebComic;
 
 public class TomeLite implements Comparable<TomeLite> {
 	
@@ -35,6 +39,11 @@ public class TomeLite implements Comparable<TomeLite> {
 	}
 	public long getTimestampAjout() {
 		return timestampAjout;
+	}
+	
+	
+	public Tome getTome() throws IOException {
+		return WebComic.getWebComic(url).getTome();
 	}
 	
 	

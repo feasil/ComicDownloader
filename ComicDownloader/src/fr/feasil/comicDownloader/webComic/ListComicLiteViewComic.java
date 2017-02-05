@@ -295,7 +295,7 @@ public class ListComicLiteViewComic extends ListComicLite {
 	public boolean updateListComic()
 	{
 		int nbPagesSite = getNbPagesSite();
-		if ( getNbPagesLues() != nbPagesSite )
+		if ( getNbPagesLues() <= nbPagesSite )
 		{
 			Document doc;
 			String category, titre, urlPage, urlPreview;

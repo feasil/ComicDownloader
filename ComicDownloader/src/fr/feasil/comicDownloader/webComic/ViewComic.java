@@ -110,4 +110,50 @@ public class ViewComic extends WebComic {
 	}
 	
 	
+	
+	@Override
+	public Tome getTome() throws IOException
+	{
+		Tome tome = null;
+		
+		if ( url != null )
+		{
+			//Pour viewcomic.com
+			Document doc = getDocument(url);
+			//
+			
+//			boolean afterGoodOne = false;
+			Page page;
+//			int i = 1;
+			int nbTome = 1;
+			//Pour récupérer le titre
+			String title = doc.title().replace("…", "").replace(" | View Comic", "").trim();
+			while ( title.startsWith(".") )
+				title = title.substring(1).trim();
+			while ( title.endsWith(".") )
+				title = title.substring(0, title.length()-1).trim();
+			//System.out.println(title);
+			//
+			tome = new Tome(nbTome, title);
+			
+			//Pour récupérer les images
+			Elements jpgs = doc.select("img[src$=.jpg]");
+			for ( Element jpg : jpgs )
+			{
+				if ( !jpg.attr("src").contains("donate-button") )//Permet de ne pas embarquer le bouton de donation
+				{
+					if ( jpg.attr("src").startsWith("//") )//Permet de contourner un bug sur le site
+						page = new Page("http:" + jpg.attr("src"));
+					else
+						page = new Page(jpg.attr("src"));
+					
+					tome.addPage(page);
+				}
+			}
+			//
+			
+		}
+		
+		return tome;
+	}
 }

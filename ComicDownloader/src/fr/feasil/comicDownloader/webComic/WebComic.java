@@ -61,6 +61,7 @@ public abstract class WebComic extends Observable {
 	
 	public abstract List<Tome> getTomes() throws IOException;
 	
+	public abstract Tome getTome() throws IOException;
 	
 	
 	/**
@@ -101,5 +102,7 @@ public abstract class WebComic extends Observable {
 		InputStream in = conn.getInputStream();
 		return in;
     }
+
+	
 	
 }

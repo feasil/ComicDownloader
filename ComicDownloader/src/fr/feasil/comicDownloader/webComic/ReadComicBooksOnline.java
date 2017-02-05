@@ -124,4 +124,14 @@ public class ReadComicBooksOnline extends WebComic {
 	}
 	
 	
+	@Override
+	public Tome getTome() throws IOException
+	{
+		Tome tome = null;
+		
+		//TODO
+		
+		return tome;
+	}
+	
 }

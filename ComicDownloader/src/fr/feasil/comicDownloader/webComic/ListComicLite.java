@@ -2,6 +2,8 @@ package fr.feasil.comicDownloader.webComic;
 
 import java.awt.AlphaComposite;
 import java.awt.Graphics2D;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -46,24 +48,43 @@ public abstract class ListComicLite extends Observable {
 	
 	
 	
-	public static BufferedImage getPreview(TomeLite tome, boolean resize) {
+	public static BufferedImage getPreview(String url, boolean resize) {
 		BufferedImage resizedImage = null;
 		try {
-			BufferedImage img = ImageIO.read(WebComic.getImage(tome.getUrlPreview()));
+			BufferedImage img = ImageIO.read(WebComic.getImage(url));
 			
 			//Resize de l'image
-			int thumbnailWidth = 500;
 			int widthToScale, heightToScale;
-			if (img.getWidth() > img.getHeight()) {
-			    heightToScale = (int)(1 * thumbnailWidth);
-			    widthToScale = (int)((heightToScale * 1.0) / img.getHeight() * img.getWidth());
-			} else {
-			    widthToScale = (int)(1 * thumbnailWidth);
-			    heightToScale = (int)((widthToScale * 1.0) / img.getWidth() * img.getHeight());
+			if ( resize )
+			{
+				int thumbnailWidth = 500;
+				
+				if (img.getWidth() > img.getHeight()) {
+				    heightToScale = (int)(1 * thumbnailWidth);
+				    widthToScale = (int)((heightToScale * 1.0) / img.getHeight() * img.getWidth());
+				} else {
+				    widthToScale = (int)(1 * thumbnailWidth);
+				    heightToScale = (int)((widthToScale * 1.0) / img.getWidth() * img.getHeight());
+				}
+				
+				
+			}
+			else
+			{//On resize par rapport à la taille de l'écran
+				GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+				//int thumbnailWidth = gd.getDisplayMode().getWidth();
+				int thumbnailHeight = gd.getDisplayMode().getHeight() - 50;
+				
+				if (img.getWidth() < img.getHeight()) {
+				    heightToScale = (int)(1 * thumbnailHeight);
+				    widthToScale = (int)((heightToScale * 1.0) / img.getHeight() * img.getWidth());
+				} else {
+				    widthToScale = (int)(1 * thumbnailHeight);
+				    heightToScale = (int)((widthToScale * 1.0) / img.getWidth() * img.getHeight());
+				}
 			}
 			
-			resizedImage = new BufferedImage(widthToScale, 
-			heightToScale, img.getType());
+			resizedImage = new BufferedImage(widthToScale, heightToScale, img.getType());
 			Graphics2D g = resizedImage.createGraphics();
 			g.setComposite(AlphaComposite.Src);
 			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);

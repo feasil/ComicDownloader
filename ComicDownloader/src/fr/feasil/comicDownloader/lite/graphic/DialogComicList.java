@@ -9,16 +9,13 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.image.BufferedImage;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -38,7 +35,6 @@ public class DialogComicList extends JDialog
 {
 	private static final long serialVersionUID = 1L;
 	
-	private static final ImageIcon IMAGE_THUMB_WAIT = new ImageIcon(DialogComicList.class.getResource("/fr/feasil/images/thumb_wait_500_750.png"));
 	private static final DateFormat DF_AFFICHAGE_DATE = new SimpleDateFormat("dd/MM/yyyy");
 	
 	private JTree tree;
@@ -287,64 +283,7 @@ public class DialogComicList extends JDialog
 			else
 				return;
 			
-			final TomeLite tome = tomeTmp;
-			
-			final JDialog dialog = new JDialog();     
-			dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-			dialog.setTitle(tome.getTitre() + " preview");
-			
-			dialog.addKeyListener(new KeyAdapter() {
-				@Override
-				public void keyPressed(KeyEvent evt) {
-					if ( evt.getKeyCode() == KeyEvent.VK_ENTER
-							|| evt.getKeyCode() == KeyEvent.VK_ESCAPE )
-						dialog.dispose();
-				}
-			});
-			
-			final JLabel lbl = new JLabel(IMAGE_THUMB_WAIT);
-			lbl.addMouseListener(new MouseAdapter() {
-				@Override
-				public void mouseClicked(MouseEvent e) {
-					dialog.dispose();
-				}
-			});
-			
-			
-			dialog.add(lbl);
-			
-			new Thread(){
-				@Override
-				public void run() {
-					final SwingWorker<BufferedImage, Void> mySwingWorker = new SwingWorker<BufferedImage, Void>(){
-			    		@Override
-			    		protected BufferedImage doInBackground() {
-							return ListComicLite.getPreview(tome, true);
-			    		}
-			    	};
-			    	mySwingWorker.execute();
-			    	
-			    	new WaintingForDownload(/*DialogComicList.this*/dialog, mySwingWorker, liste);
-			    	
-			    	BufferedImage img = null;
-					try {
-						img = mySwingWorker.get();
-					} catch (Exception e1) {
-						e1.printStackTrace();
-						img = null;
-					}
-					if ( img == null )
-					{
-						JOptionPane.showMessageDialog(DialogComicList.this, "Erreur lors du chargement de la preview...", "Error", JOptionPane.ERROR_MESSAGE);
-						dialog.dispose();
-						return;
-					}
-					
-					lbl.setIcon(new ImageIcon(img));
-					dialog.pack();
-				}
-			}.start();
-			
+			JDialog dialog = new DialogPreview(tomeTmp);
 			
 			dialog.pack();
 			dialog.setModal(true);
