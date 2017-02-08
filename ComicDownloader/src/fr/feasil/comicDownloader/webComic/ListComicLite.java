@@ -73,7 +73,7 @@ public abstract class ListComicLite extends Observable {
 			{//On resize par rapport à la taille de l'écran
 				GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
 				//int thumbnailWidth = gd.getDisplayMode().getWidth();
-				int thumbnailHeight = gd.getDisplayMode().getHeight() - 50;
+				int thumbnailHeight = gd.getDisplayMode().getHeight() - 150;
 				
 				if (img.getWidth() < img.getHeight()) {
 				    heightToScale = (int)(1 * thumbnailHeight);
