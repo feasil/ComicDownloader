@@ -6,7 +6,7 @@ import java.util.Comparator;
 import fr.feasil.comicDownloader.Tome;
 import fr.feasil.comicDownloader.webComic.WebComic;
 
-public class TomeLite implements Comparable<TomeLite> {
+public class TomeLite implements Comparable<TomeLite>, DownloadableLite {
 	
 	private final String titreBrut;
 	private final String titre;
@@ -31,6 +31,7 @@ public class TomeLite implements Comparable<TomeLite> {
 	public String getTitre() {
 		return titre;
 	}
+	@Override
 	public String getUrl() {
 		return url;
 	}
@@ -81,4 +82,14 @@ public class TomeLite implements Comparable<TomeLite> {
 		}
 	}
 	
+	
+	@Override
+	public boolean isComic() {
+		return false;
+	}
+	
+	@Override
+	public String getName() {
+		return getTitre();
+	}
 }

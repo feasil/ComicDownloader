@@ -9,6 +9,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import com.luugiathuy.apps.downloadmanager.DownloadManager;
+
 import fr.feasil.comicDownloader.Page;
 import fr.feasil.comicDownloader.Tome;
 
@@ -122,10 +124,20 @@ public class ViewComic extends WebComic {
 			Document doc = getDocument(url);
 			//
 			
-//			boolean afterGoodOne = false;
+			//Pour récupérer le numéro du tome dans le comic
+			Element select = doc.select("select#selectbox").first();
+			Elements options = select.children();
+			int numeroTome = options.size();
+			for ( Element o : options )
+			{
+				if ( url.equals(DownloadManager.verifyURL(o.attr("value")).toString()) )
+					break;
+				numeroTome--;
+			}
+			//--------------
+			
 			Page page;
-//			int i = 1;
-			int nbTome = 1;
+			
 			//Pour récupérer le titre
 			String title = doc.title().replace("…", "").replace(" | View Comic", "").trim();
 			while ( title.startsWith(".") )
@@ -134,7 +146,7 @@ public class ViewComic extends WebComic {
 				title = title.substring(0, title.length()-1).trim();
 			//System.out.println(title);
 			//
-			tome = new Tome(nbTome, title);
+			tome = new Tome(numeroTome, title);
 			
 			//Pour récupérer les images
 			Elements jpgs = doc.select("img[src$=.jpg]");

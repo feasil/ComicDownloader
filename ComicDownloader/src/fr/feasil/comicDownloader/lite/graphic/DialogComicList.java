@@ -28,6 +28,7 @@ import javax.swing.tree.TreeSelectionModel;
 
 import fr.feasil.comicDownloader.graphic.WaintingForDownload;
 import fr.feasil.comicDownloader.lite.ComicLite;
+import fr.feasil.comicDownloader.lite.DownloadableLite;
 import fr.feasil.comicDownloader.lite.TomeLite;
 import fr.feasil.comicDownloader.webComic.ListComicLite;
 
@@ -46,7 +47,7 @@ public class DialogComicList extends JDialog
 	private ListComicLite liste;
 	
 	private boolean isCanceled = true;
-	private List<ComicLite> comicsSelected;
+	private List<DownloadableLite> downloadablesSelected;
 	private boolean sortByDate = true;
 	
 	public DialogComicList(ListComicLite liste)
@@ -106,23 +107,37 @@ public class DialogComicList extends JDialog
 				if ( tree.getSelectionPaths() != null )
 				{
 					EnumTreeComicLeaf last = null;
+					boolean hasBoth = false;
 					for ( TreePath p : tree.getSelectionPaths() )
 					{
 						if ( last == null )
 							last = ((TreeComicLeaf)p.getLastPathComponent()).getType();
 						else if ( last != ((TreeComicLeaf)p.getLastPathComponent()).getType() )
 						{
-							last = null;
+							//last = null;
+							hasBoth = true;
 							break;
 						}
 					}
 					
-					if ( last == EnumTreeComicLeaf.COMIC ) {
+					if ( hasBoth )
+					{
+						btnTelecharger.setEnabled(true);
+						btnTelecharger.setText("Télécharger les éléments");
+					}
+					else if ( last == EnumTreeComicLeaf.COMIC ) {
 						btnTelecharger.setEnabled(true);
 						if ( tree.getSelectionPaths().length == 1 )
 							btnTelecharger.setText("Télécharger le comic");
 						else
 							btnTelecharger.setText("Télécharger les comics");
+					}
+					else if ( last == EnumTreeComicLeaf.TOME ) {
+						btnTelecharger.setEnabled(true);
+						if ( tree.getSelectionPaths().length == 1 )
+							btnTelecharger.setText("Télécharger le tome");
+						else
+							btnTelecharger.setText("Télécharger les tomes");
 					}
 					else
 					{
@@ -197,34 +212,69 @@ public class DialogComicList extends JDialog
 	
 	private void actionTelecharger()
 	{
-		EnumTreeComicLeaf type = null;
+//		EnumTreeComicLeaf type = null;
+//		for ( TreePath p : tree.getSelectionPaths() )
+//		{
+//			if ( type == null )
+//				type = ((TreeComicLeaf)p.getLastPathComponent()).getType();
+//			else if ( type != ((TreeComicLeaf)p.getLastPathComponent()).getType() )
+//			{
+//				type = null;
+//				break;
+//			}
+//		}
+//		
+//		if ( type == EnumTreeComicLeaf.COMIC )
+//		{
+//			downloadablesSelected = new ArrayList<DownloadableLite>();
+//			switch (type) {
+//			case COMIC:
+//				for ( TreePath p : tree.getSelectionPaths() )
+//					downloadablesSelected.add(((TreeComicLeaf)p.getLastPathComponent()).getComic());
+//				break;
+//			default:
+//				break;
+//			}
+//			
+//			isCanceled = false;
+//			dispose();
+//		}
+		
+		downloadablesSelected = new ArrayList<DownloadableLite>();
+		List<TomeLite> listeTmpTomes = new ArrayList<TomeLite>();
+		ComicLite tmpComic;
+		TomeLite tmpTome;
+		
+		
 		for ( TreePath p : tree.getSelectionPaths() )
-		{
-			if ( type == null )
-				type = ((TreeComicLeaf)p.getLastPathComponent()).getType();
-			else if ( type != ((TreeComicLeaf)p.getLastPathComponent()).getType() )
+		{//On ajoute d'abord TOUS les comics
+			if ( ((TreeComicLeaf)p.getLastPathComponent()).getType() == EnumTreeComicLeaf.COMIC )
 			{
-				type = null;
-				break;
+				tmpComic = ((TreeComicLeaf)p.getLastPathComponent()).getComic();
+				downloadablesSelected.add(tmpComic);
+				
+				//On ajoute les tomes pris en charge dans une liste temporaire
+				for ( TomeLite t : ((TreeComicLeaf)p.getLastPathComponent()).getComic().getTomesLite() )
+					listeTmpTomes.add(t);
 			}
 		}
 		
-		if ( type == EnumTreeComicLeaf.COMIC )
-		{
-			comicsSelected = new ArrayList<ComicLite>();
-			switch (type) {
-			case COMIC:
-				for ( TreePath p : tree.getSelectionPaths() )
-					comicsSelected.add(((TreeComicLeaf)p.getLastPathComponent()).getComic());
-				break;
-				
-			default:
-				break;
+		for ( TreePath p : tree.getSelectionPaths() )
+		{//On ajoute ensuite les tomes en s'assurant qu'ils ne sont pas déjà dans la liste (via les comics)
+			if ( ((TreeComicLeaf)p.getLastPathComponent()).getType() == EnumTreeComicLeaf.TOME) 
+			{
+				tmpTome = ((TreeComicLeaf)p.getLastPathComponent()).getTome();
+				//on n'ajoute le tome QUE s'il N'EST PAS déjà dans la liste (via les comics)
+				if ( !listeTmpTomes.contains(tmpTome) )
+					downloadablesSelected.add(tmpTome);
 			}
-			
-			isCanceled = false;
-			dispose();
 		}
+	
+		
+		isCanceled = false;
+		dispose();
+		
+		
 	}
 	
 	
@@ -325,10 +375,10 @@ public class DialogComicList extends JDialog
 		return isCanceled;
 	}
 	
-	public List<ComicLite> getComicsLite() {
+	public List<DownloadableLite> getDownloadablesLite() {
 		if ( isCanceled )
 			return null;
-		return comicsSelected;
+		return downloadablesSelected;
 	}
 
 }

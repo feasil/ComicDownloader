@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
-public class ComicLite implements Comparable<ComicLite> {
+public class ComicLite implements Comparable<ComicLite>, DownloadableLite {
 	
 	private final String category;
 	private final String titreCategory;
@@ -75,6 +75,25 @@ public class ComicLite implements Comparable<ComicLite> {
 				return 1;
 		}
 	}
+
+
+
+
+	@Override
+	public String getUrl() {
+		if ( getTomesLite().size() > 0 && getTomesLite().get(0) != null )
+			return getTomesLite().get(0).getUrl();
+		return null;
+	}
+
+	@Override
+	public boolean isComic() {
+		return true;
+	}
 	
+	@Override
+	public String getName() {
+		return getTitreCategory();
+	}
 }
 
