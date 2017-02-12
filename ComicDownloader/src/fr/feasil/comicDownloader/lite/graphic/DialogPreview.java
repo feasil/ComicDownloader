@@ -1,10 +1,12 @@
 package fr.feasil.comicDownloader.lite.graphic;
 
 import java.awt.BorderLayout;
+import java.awt.Point;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
@@ -16,6 +18,7 @@ import javax.swing.JSlider;
 import javax.swing.SwingWorker;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.plaf.basic.BasicSliderUI;
 
 import fr.feasil.comicDownloader.Tome;
 import fr.feasil.comicDownloader.graphic.WaintingForDownload;
@@ -54,7 +57,34 @@ public class DialogPreview  extends JDialog
 			}
 		});
 		
-		sldPage = new JSlider(JSlider.HORIZONTAL, 0, 20, 0);
+		sldPage = new JSlider(JSlider.HORIZONTAL, 0, 20, 0) {
+			private static final long serialVersionUID = 1L;
+			{
+		        MouseListener[] listeners = getMouseListeners();
+		        for (MouseListener l : listeners)
+		            removeMouseListener(l); // remove UI-installed TrackListener
+		        final BasicSliderUI ui = (BasicSliderUI) getUI();
+		        BasicSliderUI.TrackListener tl = ui.new TrackListener() {
+		            // this is where we jump to absolute value of click
+		        	@Override
+		        	public void mouseReleased(MouseEvent e) {
+		        		// TODO Auto-generated method stub
+		        		super.mouseReleased(e);
+		        	}
+		            @Override public void mouseClicked(MouseEvent e) {
+		                Point p = e.getPoint();
+		                int value = ui.valueForXPosition(p.x);
+		                
+		                setValue(value);
+		            }
+		            // disable check that will invoke scrollDueToClickInTrack
+		            @Override public boolean shouldScroll(int dir) {
+		                return false;
+		            }
+		        };
+		        addMouseListener(tl);
+		    }
+		};;
 		sldPage.setValueIsAdjusting(true);
 		sldPage.setMajorTickSpacing(5);
 		sldPage.setMinorTickSpacing(1);
@@ -65,8 +95,12 @@ public class DialogPreview  extends JDialog
 			
 			@Override
 			public void stateChanged(ChangeEvent evt) {
-				page = sldPage.getValue()-1;
-				preview();
+				int newPage = sldPage.getValue()-1;
+				if ( page != newPage )
+				{
+					page = newPage;
+					preview();
+				}
 			}
 		});
 		
