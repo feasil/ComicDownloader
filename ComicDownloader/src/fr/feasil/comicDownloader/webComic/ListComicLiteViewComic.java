@@ -303,7 +303,7 @@ public class ListComicLiteViewComic extends ListComicLite {
 			StringBuilder sb;
 			List<String> newComicsLite = new ArrayList<String>();
 			
-			try {
+//			try {
 				setChanged();
 				Object[] o = {"total", (nbPagesSite - getNbPagesLues())+1};
 				notifyObservers(o);
@@ -315,76 +315,81 @@ public class ListComicLiteViewComic extends ListComicLite {
 					o = new Object[]{"avancement", numeroPage-1};
 					notifyObservers(o);
 					
-					doc = WebComic.getDocument(WebComic.URL_VIEWCOMIC + "/page/" + Integer.toString(numeroPage));
-					
-					Element divPostArea = doc.select("div#post-area").get(0);
-					for ( Element div : divPostArea.children() )
-					{
-						titre = null;
-						urlPage = null;
-						urlPreview = null;
-						date = -1;
+					try{
+						doc = WebComic.getDocument(WebComic.URL_VIEWCOMIC + "/page/" + Integer.toString(numeroPage));
 						
-						category = div.attributes().get("class");
-						if ( category.indexOf("category-") != -1 )
+						
+						Element divPostArea = doc.select("div#post-area").get(0);
+						for ( Element div : divPostArea.children() )
 						{
-							category = category.substring(category.indexOf("category-") + 9);
-							if ( category.indexOf(" ") != -1 )
-								category = category.substring(0, category.indexOf(" "));
-						}
-						else 
-							category = "UNKNOWN";
-						
-						
-						if ( div.select("img").size() == 1 )
-							urlPreview = div.select("img").attr("src");
-						
-						if ( div.select("a.front-link").size()  == 1 )
-						{
-							titre = div.select("a.front-link").text();
-							urlPage = div.select("a.front-link").attr("href");
-						}
-						if ( div.select("p.pinbin-date").size() == 1 )
-						{
-							try {
-								date = DF_DATE_ENGLISH.parse(div.select("p.pinbin-date").text()).getTime();
-							} catch (ParseException e) {
-								date = -1;
+							titre = null;
+							urlPage = null;
+							urlPreview = null;
+							date = -1;
+							
+							category = div.attributes().get("class");
+							if ( category.indexOf("category-") != -1 )
+							{
+								category = category.substring(category.indexOf("category-") + 9);
+								if ( category.indexOf(" ") != -1 )
+									category = category.substring(0, category.indexOf(" "));
+							}
+							else 
+								category = "UNKNOWN";
+							
+							
+							if ( div.select("img").size() == 1 )
+								urlPreview = div.select("img").attr("src");
+							
+							if ( div.select("a.front-link").size()  == 1 )
+							{
+								titre = div.select("a.front-link").text();
+								urlPage = div.select("a.front-link").attr("href");
+							}
+							if ( div.select("p.pinbin-date").size() == 1 )
+							{
+								try {
+									date = DF_DATE_ENGLISH.parse(div.select("p.pinbin-date").text()).getTime();
+								} catch (ParseException e) {
+									date = -1;
+								}
+							}
+							
+							if ( titre != null && urlPage != null )
+							{//category, titre, urlPage, urlPreview, date
+								sb = new StringBuilder();
+								sb.append(category);
+								sb.append(';');
+								sb.append(titre);
+								sb.append(';');
+								sb.append(urlPage);
+								sb.append(';');
+								sb.append(urlPreview);
+								sb.append(';');
+								sb.append(Long.toString(date));
+								
+								newComicsLite.add(sb.toString());
+							}
+							else
+							{
+								System.err.println("C'est null !! : " + div + "   " + titre + "   " + urlPage);
+								return false;
 							}
 						}
-						
-						if ( titre != null && urlPage != null )
-						{//category, titre, urlPage, urlPreview, date
-							sb = new StringBuilder();
-							sb.append(category);
-							sb.append(';');
-							sb.append(titre);
-							sb.append(';');
-							sb.append(urlPage);
-							sb.append(';');
-							sb.append(urlPreview);
-							sb.append(';');
-							sb.append(Long.toString(date));
-							
-							newComicsLite.add(sb.toString());
-						}
-						else
-						{
-							System.err.println("C'est null !! : " + div + "   " + titre + "   " + urlPage);
-							return false;
-						}
+					} catch (IOException e)
+					{
+						System.err.println("Page KO : " + numeroPage + "  Exception : " + e.getMessage());
 					}
-					
 				}
 				
 				setChanged();
 				o = new Object[]{"infinite"};
 				notifyObservers(o);
 				
-			} catch (IOException e1) {
-				e1.printStackTrace();
-				return false;
-			}
+//			} catch (IOException e1) {
+//				e1.printStackTrace();
+//				return false;
+//			}
 			
 			
 			readUpdateFile(newComicsLite, nbPagesSite);

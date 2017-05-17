@@ -46,7 +46,10 @@ public class TomeLite implements Comparable<TomeLite>, DownloadableLite {
 	public Tome getTome() throws IOException {
 		return WebComic.getWebComic(url).getTome();
 	}
-	
+	//Astuce pour proposer le preview même sans disponibilité du site
+	public Tome getTomeAlternatif() throws IOException {
+		return WebComic.getWebComicAlternatif(url).getTome();
+	}
 	
 	
 	@Override

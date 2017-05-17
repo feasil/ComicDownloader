@@ -38,6 +38,22 @@ public abstract class WebComic extends Observable {
 		}
 		return null;
 	}
+	//Astuce pour proposer le preview même sans disponibilité du site
+	public static WebComic getWebComicAlternatif(String url)
+	{
+		if ( url != null )
+		{
+			if ( url.toLowerCase().startsWith(URL_VIEWCOMIC) )
+				return new ViewComic2(URL_VIEWCOMIC2 + url.substring(URL_VIEWCOMIC.length()));
+			/*else if ( url.toLowerCase().startsWith(URL_VIEWCOMIC2) )
+				return new ViewComic2(url);
+			else if ( url.toLowerCase().startsWith(URL_READCOMICBOOKSONLINE) )
+				return new ReadComicBooksOnline(url);*/
+		}
+		return null;
+	}
+	
+	
 	
 	public static ListComicLite getListWebComics(String url)
 	{

@@ -151,9 +151,16 @@ public class DialogPreview  extends JDialog
 							try {
 								tome = tomeLite.getTome();
 								sldPage.setMaximum(tome.getPages().size());
-							} catch (IOException e) {
-								e.printStackTrace();
-								return null;
+							} catch (IOException e1) {
+								//Astuce pour proposer le preview même sans disponibilité du site
+								try{
+									tome = tomeLite.getTomeAlternatif();
+									sldPage.setMaximum(tome.getPages().size());
+								} catch (Exception e2) {
+									e1.printStackTrace();
+									return null;
+								}
+								
 							}
 		    			return ListComicLite.getPreview(tome.getPages().get(page).getUrl(), false);
 		    		}
