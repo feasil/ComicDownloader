@@ -16,11 +16,15 @@ import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.SwingWorker;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.TreePath;
@@ -43,6 +47,7 @@ public class DialogComicList extends JDialog
 	private JButton btnTelecharger;
 	private JButton btnUpdate;
 	private JButton btnSort;
+	private JTextField txtSearch;
 	
 	private ListComicLite liste;
 	
@@ -191,13 +196,37 @@ public class DialogComicList extends JDialog
 				actionSort();
 			}
 		});
+		
+		txtSearch = new JTextField();
+		txtSearch.getDocument().addDocumentListener(new DocumentListener() {
+			@Override
+			public void removeUpdate(DocumentEvent e) {
+				actionFilter(txtSearch.getText());
+			}
+			@Override
+			public void insertUpdate(DocumentEvent e) {
+				actionFilter(txtSearch.getText());
+			}
+			@Override
+			public void changedUpdate(DocumentEvent e) {
+				actionFilter(txtSearch.getText());
+			}
+			
+		});
 	}
 	
 	private void addComponents() 
 	{
 		setLayout(new BorderLayout());
+		JPanel panSearch = new JPanel(new BorderLayout());
+		panSearch.add(new JLabel("Filtre : "), BorderLayout.WEST);
+		panSearch.add(txtSearch, BorderLayout.CENTER);
 		
-		this.add(btnSort, BorderLayout.NORTH);
+		JPanel top = new JPanel(new BorderLayout());
+		top.add(panSearch, BorderLayout.NORTH);
+		top.add(btnSort, BorderLayout.SOUTH);
+		
+		this.add(top, BorderLayout.NORTH);
 		
 		this.add(new JScrollPane(tree), BorderLayout.CENTER);
 		
@@ -343,6 +372,10 @@ public class DialogComicList extends JDialog
 	}
 	
 	
+	private void actionFilter(String filtre) {
+		modelTree.filtrer(filtre);
+		modelTree.reload();
+	}
 	
 	private void actionSort() 
 	{
@@ -350,6 +383,7 @@ public class DialogComicList extends JDialog
 		{
 			liste.sortByDate();
 			modelTree.setListe(liste);
+			modelTree.filtrer(txtSearch.getText());
 			modelTree.reload();
 			btnSort.setText("Trier par Nom");
 		}
@@ -357,6 +391,7 @@ public class DialogComicList extends JDialog
 		{
 			liste.sortByName();
 			modelTree.setListe(liste);
+			modelTree.filtrer(txtSearch.getText());
 			modelTree.reload();
 			btnSort.setText("Trier par Date d'ajout");
 		}
