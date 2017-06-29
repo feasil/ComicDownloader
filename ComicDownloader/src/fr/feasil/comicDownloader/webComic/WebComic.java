@@ -21,9 +21,10 @@ public abstract class WebComic extends Observable {
 	protected final static String URL_VIEWCOMIC = "http://viewcomic.com";
 	protected final static String URL_VIEWCOMIC2 = "http://view-comic.com";
 	protected final static String URL_READCOMICBOOKSONLINE = "http://readcomicbooksonline.com";
+	protected final static String URL_MANGANEL = "http://manganel.com";
 	
 	private final static File FILE_LIST_COMIC_VIEWCOMIC = new File("list/viewComic.csv");
-	private final static File FILE_LIST_COMIC_VIEWCOMIC2 = new File("list/viewComic2.csv");
+	//private final static File FILE_LIST_COMIC_VIEWCOMIC2 = new File("list/viewComic2.csv");
 	
 	public static WebComic getWebComic(String url)
 	{
@@ -35,6 +36,8 @@ public abstract class WebComic extends Observable {
 				return new ViewComic2(url);
 			else if ( url.toLowerCase().startsWith(URL_READCOMICBOOKSONLINE) )
 				return new ReadComicBooksOnline(url);
+			else if ( url.toLowerCase().startsWith(URL_MANGANEL) )
+				return new Manganel(url);
 		}
 		return null;
 	}

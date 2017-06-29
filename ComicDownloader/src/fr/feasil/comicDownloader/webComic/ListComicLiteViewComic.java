@@ -295,6 +295,7 @@ public class ListComicLiteViewComic extends ListComicLite {
 	public boolean updateListComic()
 	{
 		int nbPagesSite = getNbPagesSite();
+		
 		if ( getNbPagesLues() <= nbPagesSite )
 		{
 			Document doc;
@@ -304,12 +305,15 @@ public class ListComicLiteViewComic extends ListComicLite {
 			List<String> newComicsLite = new ArrayList<String>();
 			
 //			try {
+				//Pour ne pas tomber sur une 404 en allant une page trop loin
+				int nbPagesALire = Math.min((nbPagesSite - getNbPagesLues())+1, nbPagesSite);
+				//-----------
 				setChanged();
-				Object[] o = {"total", (nbPagesSite - getNbPagesLues())+1};
+				Object[] o = {"total", nbPagesALire};
 				notifyObservers(o);
 				
 				// On scanne les nouvelles pages avec une de plus (au cas où des éléments y auraient été ajoutés)   
-				for ( int numeroPage = 1 ; numeroPage <= (nbPagesSite - getNbPagesLues())+1 ; numeroPage++ )
+				for ( int numeroPage = 1 ; numeroPage <= nbPagesALire ; numeroPage++ )
 				{
 					setChanged();
 					o = new Object[]{"avancement", numeroPage-1};

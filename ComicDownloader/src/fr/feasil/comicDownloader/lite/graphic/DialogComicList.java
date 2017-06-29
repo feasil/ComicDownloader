@@ -144,11 +144,11 @@ public class DialogComicList extends JDialog
 						else
 							btnTelecharger.setText("Télécharger les tomes");
 					}
-					else
-					{
-						btnTelecharger.setEnabled(false);
-						btnTelecharger.setText("Télécharger");
-					}
+				}
+				else
+				{
+					btnTelecharger.setEnabled(false);
+					btnTelecharger.setText("Télécharger");
 				}
 			}
 		});
