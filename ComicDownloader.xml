@@ -50,7 +50,7 @@
 				<attribute name="Built-By" value="feasil"/>
 				<attribute name="Main-Class" value="fr.feasil.comicDownloader.graphic.DownloadComicsGUI"/>
 				<attribute name="Built-Date" value="${TODAY}"/> 
-				<attribute name="Class-Path" value="${lib.dir}/jsoup-1.9.2.jar"/>
+				<attribute name="Class-Path" value="${lib.dir}/jsoup-1.9.2.jar ${lib.dir}/sqlite-jdbc-3.19.3.jar"/>
 			</manifest>
 			<patternset>
 				<include name="fr/feasil/comicDownloader/**/*.class" />

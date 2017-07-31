@@ -1,6 +1,5 @@
 package fr.feasil.comicDownloader.webComic;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -23,7 +22,8 @@ public abstract class WebComic extends Observable {
 	protected final static String URL_READCOMICBOOKSONLINE = "http://readcomicbooksonline.com";
 	protected final static String URL_MANGANEL = "http://manganel.com";
 	
-	private final static File FILE_LIST_COMIC_VIEWCOMIC = new File("list/viewComic.csv");
+	//private final static File FILE_LIST_COMIC_VIEWCOMIC = new File("list/viewComic.csv");
+	private final static String DB_LIST_COMIC_VIEWCOMIC = "list/viewComic.db";
 	//private final static File FILE_LIST_COMIC_VIEWCOMIC2 = new File("list/viewComic2.csv");
 	
 	public static WebComic getWebComic(String url)
@@ -58,12 +58,12 @@ public abstract class WebComic extends Observable {
 	
 	
 	
-	public static ListComicLite getListWebComics(String url)
+	public static ListComicLite getListWebComics(String url) throws ListComicException
 	{
 		if ( url != null )
 		{
 			if ( url.toLowerCase().startsWith(URL_VIEWCOMIC) )
-				return new ListComicLiteViewComic(FILE_LIST_COMIC_VIEWCOMIC);
+				return new ListComicLiteViewComic(DB_LIST_COMIC_VIEWCOMIC);
 			//TODO
 //			else if ( url.toLowerCase().startsWith(URL_VIEWCOMIC2) )
 //				return new ListComicLiteViewComic2(FILE_LIST_COMIC_VIEWCOMIC2);

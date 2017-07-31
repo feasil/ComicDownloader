@@ -21,7 +21,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicSliderUI;
 
 import fr.feasil.comicDownloader.Tome;
-import fr.feasil.comicDownloader.graphic.WaintingForDownload;
+import fr.feasil.comicDownloader.graphic.WaitingForDownload;
 import fr.feasil.comicDownloader.lite.TomeLite;
 import fr.feasil.comicDownloader.webComic.ListComicLite;
 
@@ -68,7 +68,6 @@ public class DialogPreview  extends JDialog
 		            // this is where we jump to absolute value of click
 		        	@Override
 		        	public void mouseReleased(MouseEvent e) {
-		        		// TODO Auto-generated method stub
 		        		super.mouseReleased(e);
 		        	}
 		            @Override public void mouseClicked(MouseEvent e) {
@@ -167,7 +166,7 @@ public class DialogPreview  extends JDialog
 		    	};
 		    	mySwingWorker.execute();
 		    	
-		    	new WaintingForDownload(DialogPreview.this, mySwingWorker, null);
+		    	new WaitingForDownload(DialogPreview.this, mySwingWorker, null);
 		    	
 		    	BufferedImage img = null;
 				try {

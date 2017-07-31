@@ -1,5 +1,5 @@
-REM Make sure the "lib" folder is next to ComicDownloader.jar (and contains the jsoup jar).
-REM You can create the "list" folder as well with the "viewComic.csv" next to ComicDownloader.jar.
+REM Make sure the "lib" folder is next to ComicDownloader.jar (and contains the jsoup and the sqlite jars).
+REM You can create the "list" folder as well with the "viewComic.db" next to ComicDownloader.jar.
 REM 
 REM If behind proxy, use : 
 REM java -jar ComicDownloader.jar URLProxy PortProxy userProxy passwordProxy

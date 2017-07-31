@@ -1,11 +1,13 @@
 package fr.feasil.comicDownloader.webComic;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -23,15 +25,33 @@ import fr.feasil.comicDownloader.lite.TomeLite;
 public class ListComicLiteViewComic extends ListComicLite {
 	
 	private final static DateFormat DF_DATE_ENGLISH = new SimpleDateFormat("MMMM d, yyyy", Locale.ENGLISH);
+	private final static String DB_URL_START = "jdbc:sqlite:";
 	
-	private File fichier;
+	
+	private String dbFile;
 	private String site;
 	private int nbPagesLues;
 	private long timestampLecture;
 	private List<ComicLite> comicsLite;
 	
-	public ListComicLiteViewComic(File fichier) {
-		this.fichier = fichier;
+	private Connection conn = null;
+	
+	public ListComicLiteViewComic(String dbFile) throws ListComicException
+	{
+		this.dbFile = dbFile;
+		
+		try { //initie la connexion
+			Class.forName("org.sqlite.JDBC");
+			conn = DriverManager.getConnection(DB_URL_START + dbFile);
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+			throw new ListComicException("Sqlite library not found !");
+		} catch (SQLException e) {
+			e.printStackTrace();
+			throw new ListComicException("Unable to connect to database " + dbFile);
+		}
+		
+		createDBIfNotExists();
 	}
 	
 	@Override
@@ -58,200 +78,94 @@ public class ListComicLiteViewComic extends ListComicLite {
 	@Override
 	public void readFile()
 	{
-		readUpdateFile(null, -1);
-	}
-	
-	
-	/**
-	 * If listElementUpdate != null, on est en update, sinon c'est du readOnly
-	 * @param fichier
-	 * @param compare
-	 */
-	private void readUpdateFile(List<String> listElementUpdate, int nbPageUpdate)
-	{
-		BufferedReader bReader = null;
-		BufferedWriter bWriter = null;
-		File tmpFile = null;
-		String[] contenu;
-		String line = null;
+		comicsLite = new ArrayList<ComicLite>();
 		
-		boolean updateMode = (listElementUpdate!=null);
-		
-		try {
-			if ( !fichier.exists() )
-			{
-				if ( !fichier.getParentFile().exists() )
-					fichier.getParentFile().mkdirs();
-				
-				fichier.createNewFile();
-			}
-			bReader = new BufferedReader(new FileReader(fichier));
-			if ( updateMode )
-			{
-				tmpFile = new File(fichier.getParentFile(), fichier.getName() + "_tmp");
-				tmpFile.createNewFile();
-				bWriter = new BufferedWriter(new FileWriter(tmpFile));
-			}
-			
-			comicsLite = new ArrayList<ComicLite>();
-			
-			if ( (line = bReader.readLine()) != null || updateMode )
-			{//Lecture de la première ligne qui contient des infos générales
-				//site;nbPagesLues;timestampLecture
-				
-				if ( updateMode )
-				{
-					this.site = WebComic.URL_VIEWCOMIC;
-					this.nbPagesLues = nbPageUpdate;
-					this.timestampLecture = new Date().getTime();
-					
-					bWriter.append(this.site);
-					bWriter.append(';');
-					bWriter.append(Integer.toString(this.nbPagesLues));
-					bWriter.append(';');
-					bWriter.append(Long.toString(this.timestampLecture));
-					bWriter.append('\n');
-					bWriter.flush();
-				}
-				else
-				{
-					contenu = line.split(";");
-					this.site = contenu[0];
-					try {
-						this.nbPagesLues = Integer.parseInt(contenu[1]);
-					} catch (NumberFormatException e) {this.nbPagesLues = -1;}
-					try {
-						this.timestampLecture = Long.parseLong(contenu[2]);
-					} catch (NumberFormatException e) {this.timestampLecture = -1;}
-				}
-				
-			}
-			line = null;
-			if ( (updateMode && (line = bReader.readLine()) != null) || updateMode )
-			{//Lecture de la deuxième ligne pour la mise à jour
-				for ( String lineUpdate : listElementUpdate )
-				{
-					if ( !lineUpdate.equals(line) )
-						addToListComicsLite(lineUpdate, bWriter);
-					else 
-						break;
-				}
-				if ( line != null )
-					addToListComicsLite(line, bWriter);
-			}
-			
-			
-			for (  ; (line = bReader.readLine()) != null ;  )
-			{//Lectures des lignes suivantes qui contiennent les tomes
-				//category;titreBrut;url;urlPreview;timestampAjout
-				
-				//Si on est pas en updateMode, bWriter est null
-				addToListComicsLite(line, bWriter);
-			}
-			
-			
-			if ( updateMode )
-			{
-				bReader.close();
-				bWriter.close();
-				
-				if ( fichier.exists() )
-					fichier.delete();
-				tmpFile.renameTo(fichier);
-				
-			}
-			
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
-		finally {
-			if ( bReader != null ) try{bReader.close();}catch(IOException e){}
-			if ( updateMode && bWriter != null ) try{bWriter.close();}catch(IOException e){}
-		}
-		
-		
-		sortByName();
-	}
-	
-	private void addToListComicsLite(String line, BufferedWriter bWriter) throws IOException
-	{
-		String category, titreCategory, titreComicViaTome, titreTome;
-		long timestamp;
-		ComicLite tmpComic;
-		TomeLite tmpTome;
-		String[] contenu;
-		
-		contenu = line.split(";");
-		category = contenu[0];
-		titreCategory = transformCategory(category);
-		
-		
-		titreTome = contenu[1];
-		
-		//
-		titreTome = titreTome.replace("…", "").trim();
-		while ( titreTome.startsWith(".") )
-			titreTome = titreTome.substring(1).trim();
-		while ( titreTome.endsWith(".") )
-			titreTome = titreTome.substring(0, titreTome.length()-1).trim();
-		titreComicViaTome = titreTome;
-		
-		//On enleve l'annee
-		if ( titreComicViaTome.length() > 6 && titreComicViaTome.endsWith(")") && titreComicViaTome.charAt(titreComicViaTome.length()-6) == '(' )
-			titreComicViaTome = titreComicViaTome.substring(0, titreComicViaTome.length()-6).trim();
-		//On enleve le (of 00)
-		if ( titreComicViaTome.length() > 7 && titreComicViaTome.endsWith(")") && titreComicViaTome.substring(titreComicViaTome.length()-7, titreComicViaTome.length()-3).equals("(of ") )
-			titreComicViaTome = titreComicViaTome.substring(0, titreComicViaTome.length()-7).trim();
-		//On enleve le (of 0)
-		if ( titreComicViaTome.length() > 6 && titreComicViaTome.endsWith(")") && titreComicViaTome.substring(titreComicViaTome.length()-6, titreComicViaTome.length()-2).equals("(of ") )
-			titreComicViaTome = titreComicViaTome.substring(0, titreComicViaTome.length()-6).trim();
-		//On enleve le numero
-		while ( titreComicViaTome.endsWith("0") || titreComicViaTome.endsWith("1") || titreComicViaTome.endsWith("2") || titreComicViaTome.endsWith("3") || 
-				titreComicViaTome.endsWith("4") || titreComicViaTome.endsWith("5") || titreComicViaTome.endsWith("6") || titreComicViaTome.endsWith("7") || 
-				titreComicViaTome.endsWith("8") || titreComicViaTome.endsWith("9") || titreComicViaTome.endsWith(".") )
-			titreComicViaTome = titreComicViaTome.substring(0, titreComicViaTome.length()-1);
-		titreComicViaTome = titreComicViaTome.trim();
-		//
-		if ( titreComicViaTome.startsWith("– ") )
-			titreComicViaTome = titreComicViaTome.substring(2);
-		if ( titreComicViaTome.length() > 4 && !titreComicViaTome.startsWith("’") && titreComicViaTome.charAt(4) == '–')
-			titreComicViaTome = titreComicViaTome.substring(5).trim();
-		if ( titreComicViaTome.length() > 3 && !titreComicViaTome.startsWith("’") && titreComicViaTome.charAt(3) == '–')
-			titreComicViaTome = titreComicViaTome.substring(4).trim();
-		//
-		
-		
-		tmpComic = getComicLite(category);
-		if ( tmpComic == null )
+		try
 		{
-			tmpComic = new ComicLite(category, titreCategory, titreComicViaTome);
-			comicsLite.add(tmpComic);
-		}
-		
-		try {
-			timestamp = Long.parseLong(contenu[4]);
-		} catch(NumberFormatException e) { timestamp = -1; }
-		
-		
-		tmpTome = new TomeLite(contenu[1], titreTome, contenu[2], contenu[3], timestamp);
-		tmpComic.addTomeLite(tmpTome);
-		
-		
-		if ( bWriter != null )
-		{
-			bWriter.append(tmpComic.getCategory());
-			bWriter.append(';');
-			bWriter.append(tmpTome.getTitreBrut());
-			bWriter.append(';');
-			bWriter.append(tmpTome.getUrl());
-			bWriter.append(';');
-			bWriter.append(tmpTome.getUrlPreview());
-			bWriter.append(';');
-			bWriter.append(Long.toString(tmpTome.getTimestampAjout()));
-			bWriter.append('\n');
+			Statement statement = conn.createStatement();
+			statement.setQueryTimeout(30);  // set timeout to 30 sec.
 			
-			bWriter.flush();
+			ResultSet rs = statement.executeQuery(SELECT_LAST_SCAN);
+			if ( rs.next() )
+			{
+				this.site = rs.getString(SCAN_SITE);
+				this.nbPagesLues = rs.getInt(SCAN_NB_PAGE);
+				this.timestampLecture = rs.getLong(SCAN_DATE_SCAN);
+			}
+			else
+			{
+				this.site = WebComic.URL_VIEWCOMIC;
+				this.nbPagesLues = 0;
+				this.timestampLecture = 0;
+			}
+			
+			
+			
+			
+			String category, titreCategory, titreComicViaTome, titreTome;
+			long timestamp;
+			ComicLite tmpComic;
+			TomeLite tmpTome;
+			
+			rs = statement.executeQuery(SELECT_ALL_TOMES);
+			while ( rs.next() )
+			{
+				category = rs.getString(TOME_CATEGORIE);
+				titreCategory = transformCategory(category);
+				
+				titreTome = rs.getString(TOME_TITRE);
+				
+				//
+				titreTome = titreTome.replace("…", "").trim();
+				while ( titreTome.startsWith(".") )
+					titreTome = titreTome.substring(1).trim();
+				while ( titreTome.endsWith(".") )
+					titreTome = titreTome.substring(0, titreTome.length()-1).trim();
+				titreComicViaTome = titreTome;
+				
+				//On enleve l'annee
+				if ( titreComicViaTome.length() > 6 && titreComicViaTome.endsWith(")") && titreComicViaTome.charAt(titreComicViaTome.length()-6) == '(' )
+					titreComicViaTome = titreComicViaTome.substring(0, titreComicViaTome.length()-6).trim();
+				//On enleve le (of 00)
+				if ( titreComicViaTome.length() > 7 && titreComicViaTome.endsWith(")") && titreComicViaTome.substring(titreComicViaTome.length()-7, titreComicViaTome.length()-3).equals("(of ") )
+					titreComicViaTome = titreComicViaTome.substring(0, titreComicViaTome.length()-7).trim();
+				//On enleve le (of 0)
+				if ( titreComicViaTome.length() > 6 && titreComicViaTome.endsWith(")") && titreComicViaTome.substring(titreComicViaTome.length()-6, titreComicViaTome.length()-2).equals("(of ") )
+					titreComicViaTome = titreComicViaTome.substring(0, titreComicViaTome.length()-6).trim();
+				//On enleve le numero
+				while ( titreComicViaTome.endsWith("0") || titreComicViaTome.endsWith("1") || titreComicViaTome.endsWith("2") || titreComicViaTome.endsWith("3") || 
+						titreComicViaTome.endsWith("4") || titreComicViaTome.endsWith("5") || titreComicViaTome.endsWith("6") || titreComicViaTome.endsWith("7") || 
+						titreComicViaTome.endsWith("8") || titreComicViaTome.endsWith("9") || titreComicViaTome.endsWith(".") )
+					titreComicViaTome = titreComicViaTome.substring(0, titreComicViaTome.length()-1);
+				titreComicViaTome = titreComicViaTome.trim();
+				//
+				if ( titreComicViaTome.startsWith("– ") )
+					titreComicViaTome = titreComicViaTome.substring(2);
+				if ( titreComicViaTome.length() > 4 && !titreComicViaTome.startsWith("’") && titreComicViaTome.charAt(4) == '–')
+					titreComicViaTome = titreComicViaTome.substring(5).trim();
+				if ( titreComicViaTome.length() > 3 && !titreComicViaTome.startsWith("’") && titreComicViaTome.charAt(3) == '–')
+					titreComicViaTome = titreComicViaTome.substring(4).trim();
+				//
+				
+				
+				tmpComic = getComicLite(category);
+				if ( tmpComic == null )
+				{
+					tmpComic = new ComicLite(category, titreCategory, titreComicViaTome);
+					comicsLite.add(tmpComic);
+				}
+				
+				timestamp = rs.getLong(TOME_DATE_SITE);
+				
+				tmpTome = new TomeLite(rs.getString(TOME_TITRE), titreTome, rs.getString(TOME_URL_PAGE), rs.getString(TOME_URL_PREVIEW), timestamp);
+				tmpComic.addTomeLite(tmpTome);
+			}
+			
 		}
+		catch(SQLException e) {
+			e.printStackTrace();
+		}
+		
 	}
 
 	private ComicLite getComicLite(String category)
@@ -296,15 +210,35 @@ public class ListComicLiteViewComic extends ListComicLite {
 	{
 		int nbPagesSite = getNbPagesSite();
 		
-		if ( getNbPagesLues() <= nbPagesSite )
+		try
 		{
-			Document doc;
-			String category, titre, urlPage, urlPreview;
-			long date;
-			StringBuilder sb;
-			List<String> newComicsLite = new ArrayList<String>();
+			PreparedStatement stmt = conn.prepareStatement(INSERT_SCAN, Statement.RETURN_GENERATED_KEYS);
+			stmt.setQueryTimeout(30);  // set timeout to 30 sec.
 			
-//			try {
+			stmt.setString(1, this.site);
+			stmt.setInt(2, nbPagesSite);
+			stmt.setLong(3, new Date().getTime());
+			stmt.executeUpdate();
+			
+			ResultSet rs = stmt.getGeneratedKeys();
+			rs.next();
+			int idScan = rs.getInt(1);
+			
+			stmt = conn.prepareStatement(INSERT_TOME);
+			
+			PreparedStatement countStmt = conn.prepareStatement(COUNT_TOME);
+			
+			
+			
+			if ( getNbPagesLues() <= nbPagesSite )
+			{
+				Document doc;
+				String category, titre, urlPage, urlPreview;
+				long date;
+//				StringBuilder sb;
+//				List<String> newComicsLite = new ArrayList<String>();
+				
+				
 				//Pour ne pas tomber sur une 404 en allant une page trop loin
 				int nbPagesALire = Math.min((nbPagesSite - getNbPagesLues())+1, nbPagesSite);
 				//-----------
@@ -312,13 +246,17 @@ public class ListComicLiteViewComic extends ListComicLite {
 				Object[] o = {"total", nbPagesALire};
 				notifyObservers(o);
 				
+				setChanged();
+				 o = new Object[]{"prefixe", "Page "};
+				notifyObservers(o);
+				
 				// On scanne les nouvelles pages avec une de plus (au cas où des éléments y auraient été ajoutés)   
 				for ( int numeroPage = 1 ; numeroPage <= nbPagesALire ; numeroPage++ )
 				{
 					setChanged();
-					o = new Object[]{"avancement", numeroPage-1};
+					o = new Object[]{"avancement", numeroPage};
 					notifyObservers(o);
-					
+					//System.out.println(numeroPage);
 					try{
 						doc = WebComic.getDocument(WebComic.URL_VIEWCOMIC + "/page/" + Integer.toString(numeroPage));
 						
@@ -361,18 +299,36 @@ public class ListComicLiteViewComic extends ListComicLite {
 							
 							if ( titre != null && urlPage != null )
 							{//category, titre, urlPage, urlPreview, date
-								sb = new StringBuilder();
-								sb.append(category);
-								sb.append(';');
-								sb.append(titre);
-								sb.append(';');
-								sb.append(urlPage);
-								sb.append(';');
-								sb.append(urlPreview);
-								sb.append(';');
-								sb.append(Long.toString(date));
+//								sb = new StringBuilder();
+//								sb.append(category);
+//								sb.append(';');
+//								sb.append(titre);
+//								sb.append(';');
+//								sb.append(urlPage);
+//								sb.append(';');
+//								sb.append(urlPreview);
+//								sb.append(';');
+//								sb.append(Long.toString(date));
+//								
+//								newComicsLite.add(sb.toString());
 								
-								newComicsLite.add(sb.toString());
+								countStmt.setString(1, category);
+								countStmt.setString(2, titre);
+								countStmt.setString(3, urlPage);
+								countStmt.setString(4, urlPreview);
+								
+								rs = countStmt.executeQuery();
+								if ( !rs.next() || rs.getInt(1) == 0 )
+								{
+									stmt.setString(1, category);
+									stmt.setString(2, titre);
+									stmt.setString(3, urlPage);
+									stmt.setString(4, urlPreview);
+									stmt.setLong(5, date);
+									stmt.setInt(6, idScan);
+									
+									stmt.executeUpdate();
+								}
 							}
 							else
 							{
@@ -390,18 +346,88 @@ public class ListComicLiteViewComic extends ListComicLite {
 				o = new Object[]{"infinite"};
 				notifyObservers(o);
 				
-//			} catch (IOException e1) {
-//				e1.printStackTrace();
-//				return false;
-//			}
+				
+				//Mise à jour des éléments
+				readFile();
+				//------------------------
+				
+				return true;
 			
-			
-			readUpdateFile(newComicsLite, nbPagesSite);
-			
-			return true;
+			}
+		
 		}
+		catch(SQLException e) {
+			e.printStackTrace();
+		}
+		
 		return false;
 	}
+	
+	
+	
+	
+	
+	
+	private void createDBIfNotExists() 
+	{
+		File db = new File(dbFile);
+//		if ( !(db.exists()) )
+//		{
+			if ( !db.getParentFile().exists() )
+				db.getParentFile().mkdirs();
+			
+			try
+			{
+				Statement statement = conn.createStatement();
+				statement.setQueryTimeout(30);  // set timeout to 30 sec.
+		
+				//statement.executeUpdate("drop table if exists " + TABLE_SCAN);
+				//statement.executeUpdate("drop table if exists " + TABLE_TOME);
+				statement.executeUpdate("create table if not exists " + TABLE_SCAN + " ("
+						+ SCAN_ID + " integer primary key autoincrement, "
+						+ SCAN_SITE + " string, "
+						+ SCAN_NB_PAGE + " integer, "
+						+ SCAN_DATE_SCAN + " long)");
+				statement.executeUpdate("create table if not exists " + TABLE_TOME + " ("
+						+ TOME_ID + " integer primary key autoincrement, "
+						+ TOME_CATEGORIE + " string, "
+						+ TOME_TITRE + " string, "
+						+ TOME_URL_PAGE + " string, "
+						+ TOME_URL_PREVIEW + " string, "
+						+ TOME_DATE_SITE + " long, "
+						+ TOME_ID_SCAN_AJOUT + " integer)");
+			}
+			catch(SQLException e) {
+				e.printStackTrace();
+			}
+//			finally {
+//				try {
+//					if( conn != null )
+//						conn.close();
+//				}
+//				catch(SQLException e) {
+//					System.err.println(e);
+//				}
+//			}
+//		}
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	@Override
 	public int getNbPagesSite()
@@ -442,5 +468,42 @@ public class ListComicLiteViewComic extends ListComicLite {
 		
 		return -1;
 	}
-		
+	
+	
+	
+	
+	private static final String TABLE_SCAN = "SCAN";
+	private static final String SCAN_ID = "ID";
+	private static final String SCAN_SITE = "SITE";
+	private static final String SCAN_NB_PAGE = "NBPAGE";
+	private static final String SCAN_DATE_SCAN = "DATESCAN";
+	
+	private static final String TABLE_TOME = "TOME";
+	private static final String TOME_ID = "ID";
+	private static final String TOME_CATEGORIE = "CATEGORIE";
+	private static final String TOME_TITRE = "TITRE";
+	private static final String TOME_URL_PAGE = "URLPAGE";
+	private static final String TOME_URL_PREVIEW = "URLPREVIEW";
+	private static final String TOME_DATE_SITE = "DATESITE";
+	private static final String TOME_ID_SCAN_AJOUT = "IDSCANAJOUT";
+	
+	
+	private final static String SELECT_LAST_SCAN = "select * " + "from " + TABLE_SCAN + " where " + SCAN_ID + " = (select max(" + SCAN_ID + ") from " + TABLE_SCAN + ");";
+	private final static String SELECT_ALL_TOMES = "select * " + "from " + TABLE_TOME + " order by " + TOME_CATEGORIE + ", " + TOME_TITRE + ";";
+	private final static String INSERT_SCAN = "insert into " + TABLE_SCAN
+											+ " (" + SCAN_SITE + ", " + SCAN_NB_PAGE + ", " + SCAN_DATE_SCAN + ")"
+											+ " values(?, ?, ?);";
+	
+	private final static String INSERT_TOME = "insert into " + TABLE_TOME
+											+ " (" + TOME_CATEGORIE + ", " + TOME_TITRE + ", " + TOME_URL_PAGE + ", " 
+											+ TOME_URL_PREVIEW + ", " + TOME_DATE_SITE + ", " + TOME_ID_SCAN_AJOUT + ")"
+											+ " values(?, ?, ?, ?, ?, ?);";
+	
+	private final static String COUNT_TOME = "select count(*) from TOME	where " 
+											+ TOME_CATEGORIE + " = ? and " 
+											+ TOME_TITRE + " = ? and " 
+											+ TOME_URL_PAGE + " = ? and " 
+											+ TOME_URL_PREVIEW + " = ? ;";
+
+
 }

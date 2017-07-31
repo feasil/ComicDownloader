@@ -30,7 +30,7 @@ import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
-import fr.feasil.comicDownloader.graphic.WaintingForDownload;
+import fr.feasil.comicDownloader.graphic.WaitingForDownload;
 import fr.feasil.comicDownloader.lite.ComicLite;
 import fr.feasil.comicDownloader.lite.DownloadableLite;
 import fr.feasil.comicDownloader.lite.TomeLite;
@@ -53,7 +53,7 @@ public class DialogComicList extends JDialog
 	
 	private boolean isCanceled = true;
 	private List<DownloadableLite> downloadablesSelected;
-	private boolean sortByDate = true;
+	private boolean isSortByDate = true;
 	
 	public DialogComicList(ListComicLite liste)
 	{
@@ -72,6 +72,8 @@ public class DialogComicList extends JDialog
 		setSize(new Dimension(400, 600));
 		
 		//setResizable(false);
+		
+		actionSort();
 	}
 	
 	private void initFrame()
@@ -333,6 +335,9 @@ public class DialogComicList extends JDialog
     				modelTree.reload();
     				
     				updateTitle();
+    				
+    				isSortByDate = true;
+    				actionSort();
     			}
     			else 
     				JOptionPane.showMessageDialog(DialogComicList.this, "Erreur lors de l'update...", "Error", JOptionPane.ERROR_MESSAGE);
@@ -342,7 +347,7 @@ public class DialogComicList extends JDialog
     	};
     	mySwingWorker.execute();
     	
-    	new WaintingForDownload(DialogComicList.this, mySwingWorker, liste);
+    	new WaitingForDownload(DialogComicList.this, mySwingWorker, liste);
 	}
 	
 	private void actionPreview() {
@@ -379,7 +384,7 @@ public class DialogComicList extends JDialog
 	
 	private void actionSort() 
 	{
-		if ( sortByDate )
+		if ( !isSortByDate )
 		{
 			liste.sortByDate();
 			modelTree.setListe(liste);
@@ -395,7 +400,7 @@ public class DialogComicList extends JDialog
 			modelTree.reload();
 			btnSort.setText("Trier par Date d'ajout");
 		}
-		sortByDate = !sortByDate;
+		isSortByDate = !isSortByDate;
 	}
 	
 	

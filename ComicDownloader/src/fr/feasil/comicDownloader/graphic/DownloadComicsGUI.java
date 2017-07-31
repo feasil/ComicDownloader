@@ -35,6 +35,7 @@ import fr.feasil.comicDownloader.Page;
 import fr.feasil.comicDownloader.Tome;
 import fr.feasil.comicDownloader.lite.DownloadableLite;
 import fr.feasil.comicDownloader.lite.graphic.DialogComicList;
+import fr.feasil.comicDownloader.webComic.ListComicException;
 import fr.feasil.comicDownloader.webComic.ListComicLite;
 import fr.feasil.comicDownloader.webComic.WebComic;
 
@@ -376,65 +377,71 @@ public class DownloadComicsGUI extends javax.swing.JFrame implements Observer{
     	URL verifiedUrl = DownloadManager.verifyURL("http://viewcomic.com");
         if (verifiedUrl != null) {
 	    	
-        	final ListComicLite liste = WebComic.getListWebComics(verifiedUrl.toString());
-        	
-        	final SwingWorker<Void, Void> mySwingWorker = new SwingWorker<Void, Void>(){
-        		@Override
-        		protected Void doInBackground() {
-        			liste.readFile();
-					return null;
-        		}
-        	};
-        	mySwingWorker.execute();
-        	new WaintingForDownload(DownloadComicsGUI.this, mySwingWorker, liste);
-	    	
-	    	if ( liste != null )
-	    	{
-		    	DialogComicList dialogComics = new DialogComicList(liste);
-		    	dialogComics.setModal(true);
-		    	dialogComics.setLocationRelativeTo(this);
-		    	dialogComics.setVisible(true);
-	
-		    	if ( !dialogComics.isCanceled() )
+        	final ListComicLite liste;
+			try {
+				liste = WebComic.getListWebComics(verifiedUrl.toString());
+				
+	        	final SwingWorker<Void, Void> mySwingWorker = new SwingWorker<Void, Void>(){
+	        		@Override
+	        		protected Void doInBackground() {
+	        			liste.readFile();
+						return null;
+	        		}
+	        	};
+	        	mySwingWorker.execute();
+	        	new WaitingForDownload(DownloadComicsGUI.this, mySwingWorker, liste);
+		    	
+		    	if ( liste != null )
 		    	{
-		    		jtxURL.setEnabled(false);
-		    		jbnAdd.setEnabled(false);
-		    		jbnListComics.setEnabled(false);
-		    		
-		    		for ( DownloadableLite downl : dialogComics.getDownloadablesLite() )
-		    		{
-			        	verifiedUrl = DownloadManager.verifyURL(downl.getUrl());
-			            if (verifiedUrl != null) {
-			            	
-			            	final WebComic webComic = WebComic.getWebComic(verifiedUrl.toString());
-			            	
-			            	if ( webComic != null )
-			            	{
-			            		if ( downl.isComic() )
-			            			addComicToDownload(webComic, true);
-			            		else
-			            			addComicToDownload(webComic, false);
-			            	}
-			            	else
-			            	{
-			            		jtxURL.setEnabled(true);
-			            		jbnAdd.setEnabled(true);
-			            		jbnListComics.setEnabled(true);
-			            		JOptionPane.showMessageDialog(DownloadComicsGUI.this, downl.getName() + " -- Ce site n'est pas géré (" + downl.getUrl() + ")", "Error", JOptionPane.ERROR_MESSAGE);
-			            	}
-			            } else {
-			            	jtxURL.setEnabled(true);
-			        		jbnAdd.setEnabled(true);
-			        		jbnListComics.setEnabled(true);
-			                JOptionPane.showMessageDialog(DownloadComicsGUI.this, downl.getName() + " -- Invalid Download URL (" + downl.getUrl() + ")", "Error", JOptionPane.ERROR_MESSAGE);
-			            }
-		    		}
-		    		
-		    	}
-	    	} 
-	    	else {
-	        	JOptionPane.showMessageDialog(DownloadComicsGUI.this, "Ce site n'est pas géré", "Error", JOptionPane.ERROR_MESSAGE);
-	        }
+			    	DialogComicList dialogComics = new DialogComicList(liste);
+			    	dialogComics.setModal(true);
+			    	dialogComics.setLocationRelativeTo(this);
+			    	dialogComics.setVisible(true);
+		
+			    	if ( !dialogComics.isCanceled() )
+			    	{
+			    		jtxURL.setEnabled(false);
+			    		jbnAdd.setEnabled(false);
+			    		jbnListComics.setEnabled(false);
+			    		
+			    		for ( DownloadableLite downl : dialogComics.getDownloadablesLite() )
+			    		{
+				        	verifiedUrl = DownloadManager.verifyURL(downl.getUrl());
+				            if (verifiedUrl != null) {
+				            	
+				            	final WebComic webComic = WebComic.getWebComic(verifiedUrl.toString());
+				            	
+				            	if ( webComic != null )
+				            	{
+				            		if ( downl.isComic() )
+				            			addComicToDownload(webComic, true);
+				            		else
+				            			addComicToDownload(webComic, false);
+				            	}
+				            	else
+				            	{
+				            		jtxURL.setEnabled(true);
+				            		jbnAdd.setEnabled(true);
+				            		jbnListComics.setEnabled(true);
+				            		JOptionPane.showMessageDialog(DownloadComicsGUI.this, downl.getName() + " -- Ce site n'est pas géré (" + downl.getUrl() + ")", "Error", JOptionPane.ERROR_MESSAGE);
+				            	}
+				            } else {
+				            	jtxURL.setEnabled(true);
+				        		jbnAdd.setEnabled(true);
+				        		jbnListComics.setEnabled(true);
+				                JOptionPane.showMessageDialog(DownloadComicsGUI.this, downl.getName() + " -- Invalid Download URL (" + downl.getUrl() + ")", "Error", JOptionPane.ERROR_MESSAGE);
+				            }
+			    		}
+			    		
+			    	}
+		    	} 
+		    	else {
+		        	JOptionPane.showMessageDialog(DownloadComicsGUI.this, "Ce site n'est pas géré", "Error", JOptionPane.ERROR_MESSAGE);
+		        }
+			} catch (ListComicException e) {
+				JOptionPane.showMessageDialog(DownloadComicsGUI.this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE); 
+				//e.printStackTrace();
+			}
         }
         else {
 	        JOptionPane.showMessageDialog(DownloadComicsGUI.this, "Invalid Download URL", "Error", JOptionPane.ERROR_MESSAGE);
@@ -500,7 +507,7 @@ public class DownloadComicsGUI extends javax.swing.JFrame implements Observer{
     	new Thread(){
     		@Override
     		public void run() {
-    			new WaintingForDownload(DownloadComicsGUI.this, mySwingWorker, webComic);
+    			new WaitingForDownload(DownloadComicsGUI.this, mySwingWorker, webComic);
     		}
     	}.start();
     	mySwingWorker.execute();
