@@ -231,7 +231,7 @@ public class ListComicLiteViewComic2 extends ListComicLite {
 		} catch(NumberFormatException e) { timestamp = -1; }
 		
 		
-		tmpTome = new TomeLite(contenu[1], titreTome, contenu[2], contenu[3], timestamp);
+		tmpTome = new TomeLite(-1, contenu[1], titreTome, contenu[2], contenu[3], timestamp, false);
 		tmpComic.addTomeLite(tmpTome);
 		
 		
@@ -468,5 +468,11 @@ public class ListComicLiteViewComic2 extends ListComicLite {
 	}
 	
 	
+	
+	@Override
+	public void tomePreviewErrorUpdated(TomeLite tomeLite, boolean newValue) {
+		// useless
+		
+	}
 	
 }

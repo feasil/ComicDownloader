@@ -157,7 +157,8 @@ public class ListComicLiteViewComic extends ListComicLite {
 				
 				timestamp = rs.getLong(TOME_DATE_SITE);
 				
-				tmpTome = new TomeLite(rs.getString(TOME_TITRE), titreTome, rs.getString(TOME_URL_PAGE), rs.getString(TOME_URL_PREVIEW), timestamp);
+				tmpTome = new TomeLite(rs.getInt(TOME_ID), rs.getString(TOME_TITRE), titreTome, rs.getString(TOME_URL_PAGE), rs.getString(TOME_URL_PREVIEW), timestamp, (rs.getInt(TOME_PREVIEW_ERROR)!=0));
+				tmpTome.addListComicLiteListener(this);
 				tmpComic.addTomeLite(tmpTome);
 			}
 			
@@ -396,6 +397,15 @@ public class ListComicLiteViewComic extends ListComicLite {
 						+ TOME_URL_PREVIEW + " string, "
 						+ TOME_DATE_SITE + " long, "
 						+ TOME_ID_SCAN_AJOUT + " integer)");
+				
+				
+				//Mise à jour de la base en alter si nécessaire
+				try {
+					statement.executeUpdate("ALTER TABLE " + TABLE_TOME + " ADD COLUMN " + TOME_PREVIEW_ERROR + " integer default 0");
+				} catch (SQLException e) {
+					//Si l'alter plante, pas besoin de logger, c'est que la base est à la bonne version
+				}
+				
 			}
 			catch(SQLException e) {
 				e.printStackTrace();
@@ -412,12 +422,20 @@ public class ListComicLiteViewComic extends ListComicLite {
 //		}
 	}
 	
-	
-	
-	
-	
-	
-	
+	@Override
+	public void tomePreviewErrorUpdated(TomeLite tomeLite, boolean newValue) {
+		try {
+		PreparedStatement stmt = conn.prepareStatement(UPDATE_TOME_PREVIEW_ERROR);
+		stmt.setQueryTimeout(30);  // set timeout to 30 sec.
+		
+		stmt.setInt(1, (tomeLite.isPreviewError()?1:0));
+		stmt.setInt(2, tomeLite.getId());
+		stmt.executeUpdate();
+		}
+		catch(SQLException e) {
+			e.printStackTrace();
+		}
+	}
 	
 	
 	
@@ -486,6 +504,7 @@ public class ListComicLiteViewComic extends ListComicLite {
 	private static final String TOME_URL_PREVIEW = "URLPREVIEW";
 	private static final String TOME_DATE_SITE = "DATESITE";
 	private static final String TOME_ID_SCAN_AJOUT = "IDSCANAJOUT";
+	private static final String TOME_PREVIEW_ERROR = "PREVIEWERROR";
 	
 	
 	private final static String SELECT_LAST_SCAN = "select * " + "from " + TABLE_SCAN + " where " + SCAN_ID + " = (select max(" + SCAN_ID + ") from " + TABLE_SCAN + ");";
@@ -496,14 +515,16 @@ public class ListComicLiteViewComic extends ListComicLite {
 	
 	private final static String INSERT_TOME = "insert into " + TABLE_TOME
 											+ " (" + TOME_CATEGORIE + ", " + TOME_TITRE + ", " + TOME_URL_PAGE + ", " 
-											+ TOME_URL_PREVIEW + ", " + TOME_DATE_SITE + ", " + TOME_ID_SCAN_AJOUT + ")"
-											+ " values(?, ?, ?, ?, ?, ?);";
+											+ TOME_URL_PREVIEW + ", " + TOME_DATE_SITE + ", " + TOME_ID_SCAN_AJOUT + ", " + TOME_PREVIEW_ERROR + ")"
+											+ " values(?, ?, ?, ?, ?, ?, ?);";
 	
 	private final static String COUNT_TOME = "select count(*) from TOME	where " 
 											+ TOME_CATEGORIE + " = ? and " 
 											+ TOME_TITRE + " = ? and " 
 											+ TOME_URL_PAGE + " = ? and " 
 											+ TOME_URL_PREVIEW + " = ? ;";
-
-
+	
+	private final static String UPDATE_TOME_PREVIEW_ERROR = "update " + TABLE_TOME
+															+ " set " + TOME_PREVIEW_ERROR + "=?" 
+															+ " where " + TOME_ID + "=? ;";
 }

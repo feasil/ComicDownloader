@@ -39,7 +39,12 @@ public class ComicLite implements Comparable<ComicLite>, DownloadableLite {
 		return tomesLite;
 	}
 	
-	
+	public boolean isPreviewError() {
+		for ( TomeLite t : tomesLite )
+			if ( !t.isPreviewError() )
+				return false;
+		return true;
+	}
 	
 	
 	@Override

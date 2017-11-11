@@ -1,5 +1,6 @@
 package fr.feasil.comicDownloader.lite.graphic;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -36,7 +37,7 @@ public class TreeComicCellRenderer extends DefaultTreeCellRenderer
 			comicLeaf = (TreeComicLeaf) value;
 			
 			setIcon(null);
-			
+			setForeground(Color.BLACK);
 			
 			switch ( comicLeaf.getType() )
 			{
@@ -50,6 +51,8 @@ public class TreeComicCellRenderer extends DefaultTreeCellRenderer
 					setIcon(ICON_CLOSED);
 				try {
 					setText(comicLeaf.getComic().getTitreCategory() + " (" + comicLeaf.getComic().getTomesLite().size() + ")");
+					if ( comicLeaf.getComic().isPreviewError() )
+						setForeground(Color.LIGHT_GRAY);
 				}catch (Exception e) {
 					setText("ERROR - ILLISIBLE");
 				}
@@ -57,6 +60,8 @@ public class TreeComicCellRenderer extends DefaultTreeCellRenderer
 			case TOME:
 				try {
 					setText(comicLeaf.getTome().getTitre() + " - " + DF_AFFICHAGE_DATE.format(comicLeaf.getTome().getTimestampAjout()));
+					if ( comicLeaf.getTome().isPreviewError() )
+						setForeground(Color.LIGHT_GRAY);
 				}catch (Exception e) {
 					setText("ERROR - ILLISIBLE");
 				}

@@ -16,7 +16,7 @@ import javax.imageio.ImageIO;
 import fr.feasil.comicDownloader.lite.ComicLite;
 import fr.feasil.comicDownloader.lite.TomeLite;
 
-public abstract class ListComicLite extends Observable {
+public abstract class ListComicLite extends Observable implements ListComicLiteListener {
 	
 	public abstract String getSite();
 	
@@ -48,55 +48,51 @@ public abstract class ListComicLite extends Observable {
 	
 	
 	
-	public static BufferedImage getPreview(String url, boolean resize) {
+	public static BufferedImage getPreview(String url, boolean resize) throws IOException {
 		BufferedImage resizedImage = null;
-		try {
-			BufferedImage img = ImageIO.read(WebComic.getImage(url));
+		BufferedImage img = ImageIO.read(WebComic.getImage(url));
+		
+		//Resize de l'image
+		int widthToScale, heightToScale;
+		if ( resize )
+		{
+			int thumbnailWidth = 500;
 			
-			//Resize de l'image
-			int widthToScale, heightToScale;
-			if ( resize )
-			{
-				int thumbnailWidth = 500;
-				
-				if (img.getWidth() > img.getHeight()) {
-				    heightToScale = (int)(1 * thumbnailWidth);
-				    widthToScale = (int)((heightToScale * 1.0) / img.getHeight() * img.getWidth());
-				} else {
-				    widthToScale = (int)(1 * thumbnailWidth);
-				    heightToScale = (int)((widthToScale * 1.0) / img.getWidth() * img.getHeight());
-				}
-				
-				
-			}
-			else
-			{//On resize par rapport à la taille de l'écran
-				GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
-				//int thumbnailWidth = gd.getDisplayMode().getWidth();
-				int thumbnailHeight = gd.getDisplayMode().getHeight() - 150;
-				
-				if (img.getWidth() < img.getHeight()) {
-				    heightToScale = (int)(1 * thumbnailHeight);
-				    widthToScale = (int)((heightToScale * 1.0) / img.getHeight() * img.getWidth());
-				} else {
-				    widthToScale = (int)(1 * thumbnailHeight);
-				    heightToScale = (int)((widthToScale * 1.0) / img.getWidth() * img.getHeight());
-				}
+			if (img.getWidth() > img.getHeight()) {
+			    heightToScale = (int)(1 * thumbnailWidth);
+			    widthToScale = (int)((heightToScale * 1.0) / img.getHeight() * img.getWidth());
+			} else {
+			    widthToScale = (int)(1 * thumbnailWidth);
+			    heightToScale = (int)((widthToScale * 1.0) / img.getWidth() * img.getHeight());
 			}
 			
-			resizedImage = new BufferedImage(widthToScale, heightToScale, img.getType());
-			Graphics2D g = resizedImage.createGraphics();
-			g.setComposite(AlphaComposite.Src);
-			g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-			g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-			g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-			g.drawImage(img, 0, 0, widthToScale, heightToScale, null);
-			g.dispose();
-			//------
 			
-		} catch (IOException e) {
-			e.printStackTrace();
 		}
+		else
+		{//On resize par rapport à la taille de l'écran
+			GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+			//int thumbnailWidth = gd.getDisplayMode().getWidth();
+			int thumbnailHeight = gd.getDisplayMode().getHeight() - 150;
+			
+			if (img.getWidth() < img.getHeight()) {
+			    heightToScale = (int)(1 * thumbnailHeight);
+			    widthToScale = (int)((heightToScale * 1.0) / img.getHeight() * img.getWidth());
+			} else {
+			    widthToScale = (int)(1 * thumbnailHeight);
+			    heightToScale = (int)((widthToScale * 1.0) / img.getWidth() * img.getHeight());
+			}
+		}
+		
+		resizedImage = new BufferedImage(widthToScale, heightToScale, img.getType());
+		Graphics2D g = resizedImage.createGraphics();
+		g.setComposite(AlphaComposite.Src);
+		g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+		g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+		g.drawImage(img, 0, 0, widthToScale, heightToScale, null);
+		g.dispose();
+		//------
+		
 		
 		return resizedImage;
 	}

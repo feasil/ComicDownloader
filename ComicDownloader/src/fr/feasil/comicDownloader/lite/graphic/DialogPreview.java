@@ -8,6 +8,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import javax.swing.ImageIcon;
@@ -143,7 +144,7 @@ public class DialogPreview  extends JDialog
 			public void run() {
 				final SwingWorker<BufferedImage, Void> mySwingWorker = new SwingWorker<BufferedImage, Void>(){
 		    		@Override
-		    		protected BufferedImage doInBackground() {
+		    		protected BufferedImage doInBackground() throws IOException {
 		    			if ( page == -1 )
 		    				return ListComicLite.getPreview(tomeLite.getUrlPreview(), true);
 		    			if ( tome == null )
@@ -172,15 +173,20 @@ public class DialogPreview  extends JDialog
 				try {
 					img = mySwingWorker.get();
 				} catch (Exception e1) {
-					e1.printStackTrace();
-					img = null;
-				}
-				if ( img == null )
-				{
-					JOptionPane.showMessageDialog(DialogPreview.this, "Erreur lors du chargement de la preview...", "Error", JOptionPane.ERROR_MESSAGE);
+					if ( e1.getCause() instanceof FileNotFoundException )
+						JOptionPane.showMessageDialog(DialogPreview.this, "Le comic n'existe plus ou n'est pas accessible...", "Warning", JOptionPane.WARNING_MESSAGE);
+					else
+						JOptionPane.showMessageDialog(DialogPreview.this, "Erreur lors du chargement de la preview...", "Error", JOptionPane.ERROR_MESSAGE);
+					
+					if ( !tomeLite.isPreviewError() )
+						tomeLite.setPreviewError(true);
+					
 					dispose();
 					return;
 				}
+				
+				if ( tomeLite.isPreviewError() )
+					tomeLite.setPreviewError(false);
 				
 				lblPreview.setIcon(new ImageIcon(img));
 				pack();

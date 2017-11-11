@@ -1,20 +1,26 @@
 package fr.feasil.comicDownloader.lite;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 
 import fr.feasil.comicDownloader.Tome;
+import fr.feasil.comicDownloader.webComic.ListComicLiteListener;
 import fr.feasil.comicDownloader.webComic.WebComic;
 
 public class TomeLite implements Comparable<TomeLite>, DownloadableLite {
 	
+	private final int id;
 	private final String titreBrut;
 	private final String titre;
 	private final String url;
 	private final String urlPreview;
 	private final long timestampAjout;
+	private boolean previewError;
 	
-	public TomeLite(String titreBrut, String titre, String url, String urlPreview, long timestampAjout) {
+	public TomeLite(int id, String titreBrut, String titre, String url, String urlPreview, long timestampAjout, boolean previewError) {
+		this.id = id;
 		this.titreBrut = titreBrut;
 		this.titre = titre;
 		this.url = url;
@@ -23,8 +29,12 @@ public class TomeLite implements Comparable<TomeLite>, DownloadableLite {
 		else
 			this.urlPreview = urlPreview;
 		this.timestampAjout = timestampAjout;
+		this.previewError = previewError;
 	}
 	
+	public int getId() {
+		return id;
+	}
 	public String getTitreBrut() {
 		return titreBrut;
 	}
@@ -40,6 +50,14 @@ public class TomeLite implements Comparable<TomeLite>, DownloadableLite {
 	}
 	public long getTimestampAjout() {
 		return timestampAjout;
+	}
+	public boolean isPreviewError() {
+		return previewError;
+	}
+	
+	public void setPreviewError(boolean previewError) {
+		this.previewError = previewError;
+		fireTomePreviewErrorUpdated();
 	}
 	
 	
@@ -94,5 +112,20 @@ public class TomeLite implements Comparable<TomeLite>, DownloadableLite {
 	@Override
 	public String getName() {
 		return getTitre();
+	}
+	
+	
+	
+	private final List<ListComicLiteListener> listeners = new ArrayList<ListComicLiteListener>();
+	public void addListComicLiteListener(ListComicLiteListener listener) {
+		listeners.add(listener);
+	}
+	public void removeListComicLiteListener(ListComicLiteListener listener) {
+		listeners.remove(listener);
+	}
+	
+	private void fireTomePreviewErrorUpdated() {
+		for ( ListComicLiteListener l : listeners )
+			l.tomePreviewErrorUpdated(this, this.isPreviewError());
 	}
 }
